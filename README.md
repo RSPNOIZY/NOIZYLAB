@@ -33,16 +33,14 @@ that power every brand in the empire without belonging to any single one.
 | Brand | Role |
 |---|---|
 | [NOIZY.AI](https://noizy.ai) | Sovereign AI infrastructure |
-| [NOIZYFISH](https://github.com/RSPNOIZY/NOIZYFISH) | Producer ecosystem |
-| [NOIZYKIDZ](https://github.com/RSPNOIZY/NOIZYKIDZ) | Youth division |
+| [NOIZYFISH](https://noizyfish.com) | Producer ecosystem |
+| [NOIZYKIDZ](https://noizykidz.com) | Youth division |
+| [NOIZYVOX](https://noizyvox.com) | Voice + schema core |
+| [NOIZYLAB](https://noizylab.ca) | Research + shared tooling |
 | [DREAMCHAMBER](https://github.com/RSPNOIZY/DREAMCHAMBER) | Creative residency |
 | [THE-OLD-GUARD](https://github.com/RSPNOIZY/THE-OLD-GUARD) | Legacy artist catalog |
-| [FISHMUSICINC](https://github.com/RSPNOIZY/FISHMUSICINC) | Label infrastructure |
-| [NOIZYLAB](https://github.com/RSPNOIZY/NOIZYLAB) | Research + shared tooling |
-| [THE-GATHERED](https://github.com/RSPNOIZY/THE-GATHERED) | Community gathering point |
+| [THE-GATHERING](https://github.com/RSPNOIZY/THE-GATHERING) | Community gathering point |
 | [NOIZYANTHROPIC](https://github.com/RSPNOIZY/NOIZYANTHROPIC) | AI governance + doctrine |
-| [NOIZYVOX](https://github.com/RSPNOIZY/NOIZYVOX) | Voice + schema core |
-
----
+| [THE-AQUARIUM](https://github.com/RSPNOIZY/THE-AQUARIUM) | Audio vault -- CLIENT#1 RSP001 |
 
 **killSwitchHolder:** RSP_001 | **covenant:** 75/25 | **canon:** noizy.ai
