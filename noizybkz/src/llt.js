@@ -106,8 +106,83 @@ export async function lltReport(db, book, { from = "0000-01-01", to = "9999-12-3
   const outstanding = holders.reduce((s, h) => s + h.credits, 0);
   return {
     policy: book.llt_policy, unit: "LLT credits (1 LLT = 1,000 credits)", from, to,
-    issued: f["8500"] || 0, redeemed_in_system: -(f["8600"] || 0), redeemed_for_cash: -(f["8650"] || 0), expired: -(f["8700"] || 0),
+    issued: f["8500"] || 0, redeemed_in_system: 0 - (f["8600"] || 0), redeemed_for_cash: 0 - (f["8650"] || 0), expired: 0 - (f["8700"] || 0),
     outstanding, holders,
     fiat_liability: book.llt_policy === "fiscal" ? fiatValue(book, outstanding) : null,
+  };
+}
+
+// ---- Dashboard ----------------------------------------------------------------
+// Tiers from LifeluvToken.ts TOKEN_TIERS, applied to lifetime tokens earned.
+export const TIERS = [
+  { name: "Seed", min: 0, status: "Community Member" },
+  { name: "Root", min: 10, status: "LIFELUV Contributor" },
+  { name: "Branch", min: 50, status: "LIFELUV Builder" },
+  { name: "Canopy", min: 200, status: "LIFELUV Leader" },
+  { name: "Forest", min: 500, status: "LIFELUV Legend" },
+];
+const tierFor = (credits) => [...TIERS].reverse().find((t) => credits / 1000 >= t.min).name;
+
+// What each earning action means in the world, for the public impact view.
+export const IMPACT_LABELS = {
+  RESTORE_INSTRUMENT: "Instruments restored", RESTORE_APPLE_DEVICE: "Apple devices restored",
+  TEACH_MUSIC_LESSON: "Music lessons taught", RECORD_TUTORIAL: "Tutorials recorded",
+  TRANSLATE_CONTENT: "Translations", FACILITATE_WORKSHOP: "Workshops facilitated",
+  DELIVER_GEAR: "Gear deliveries", SUBMIT_INSTRUMENT: "Instruments donated",
+  REFER_PARTNER: "Partners referred", INTRO_MILITARY_PARTNER: "Public-works partnerships",
+  SHARE_SOCIAL_MEDIA: "Social shares", REGISTER_RECIPIENT_FAMILY: "Families registered",
+  COMPLETE_FAMILY_PROFILE: "Family profiles completed", INVITE_FAMILY_MEMBER: "Family members invited",
+};
+
+const monthsBack = (to, n) => {
+  const [y, m] = to.slice(0, 7).split("-").map(Number);
+  return Array.from({ length: n }, (_, i) => {
+    const d = new Date(Date.UTC(y, m - 1 - (n - 1 - i), 1));
+    return d.toISOString().slice(0, 7);
+  });
+};
+
+// `public` = aggregate counts only, no member ids (for impact reports and partners).
+export async function lltDashboard(db, book, { to, months = "12", public: pub } = {}) {
+  const end = to || new Date().toISOString().slice(0, 10);
+  const span = Math.min(Math.max(parseInt(months, 10) || 12, 1), 36);
+  const labels = monthsBack(end, span);
+  const from = `${labels[0]}-01`;
+
+  const summary = await lltReport(db, book, { from, to: end });
+  const { results: series } = await db.prepare(`
+    SELECT substr(t.date, 1, 7) AS month, p.account_code AS acct, SUM(p.amount) AS total
+    FROM postings p JOIN txns t ON t.id = p.txn_id
+    WHERE p.book_id = ? AND t.date >= ? AND t.date <= ? AND p.account_code IN ('8500','8600','8650','8700')
+    GROUP BY month, acct`).bind(book.id, from, end).all();
+  const monthly = labels.map((month) => {
+    const get = (a) => series.find((r) => r.month === month && r.acct === a)?.total || 0;
+    return { month, issued: get("8500"), redeemed: 0 - (get("8600") + get("8650")), expired: 0 - get("8700") };
+  });
+
+  const { results: actions } = await db.prepare(`
+    SELECT p.memo AS action, COUNT(*) AS times, SUM(p.amount) AS credits
+    FROM postings p JOIN txns t ON t.id = p.txn_id
+    WHERE p.book_id = ? AND p.account_code = '8500' AND t.date >= ? AND t.date <= ?
+    GROUP BY p.memo ORDER BY credits DESC`).bind(book.id, from, end).all();
+  const impact = actions.map((a) => ({
+    action: a.action, label: IMPACT_LABELS[a.action] || "Other contributions", times: a.times, credits: a.credits,
+  }));
+
+  const { results: people } = await db.prepare(`
+    SELECT party AS holder, -SUM(amount) AS held, -SUM(CASE WHEN amount < 0 THEN amount ELSE 0 END) AS earned
+    FROM postings WHERE book_id = ? AND account_code = '8100' AND party IS NOT NULL
+    GROUP BY party ORDER BY earned DESC`).bind(book.id).all();
+  const members = people.map((p) => ({ ...p, tier: tierFor(p.earned) }));
+  const tiers = TIERS.map((t) => ({ ...t, members: members.filter((m) => m.tier === t.name).length }));
+
+  return {
+    policy: book.llt_policy, from, to: end,
+    kpis: {
+      outstanding: summary.outstanding, members: members.length,
+      issued: summary.issued, redeemed: summary.redeemed_in_system + summary.redeemed_for_cash, expired: summary.expired,
+    },
+    monthly, impact, tiers,
+    members: pub ? null : members,
   };
 }

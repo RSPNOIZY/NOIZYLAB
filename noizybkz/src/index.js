@@ -9,6 +9,7 @@ import { exportBeancount } from "./export.js";
 import * as T from "./llt.js";
 import * as K from "./bank.js";
 import { UI } from "./ui.js";
+import { LIFELUV } from "./lifeluv.js";
 
 const json = (body, status = 200) =>
   new Response(JSON.stringify(body, null, 2), { status, headers: { "content-type": "application/json", "cache-control": "no-store" } });
@@ -33,6 +34,7 @@ export async function handle(request, env) {
   const path = url.pathname.replace(/\/+$/, "") || "/";
 
   if (m === "GET" && path === "/") return new Response(UI, { headers: { "content-type": "text/html; charset=utf-8" } });
+  if (m === "GET" && path === "/lifeluv") return new Response(LIFELUV, { headers: { "content-type": "text/html; charset=utf-8" } });
   if (m === "GET" && path === "/health") return json({ ok: true, app: "NOIZYBKZ" });
   if (!path.startsWith("/api/")) return json({ error: "not found" }, 404);
   if (!(await authorized(request, env))) return json({ error: "unauthorized" }, 401);
@@ -73,6 +75,7 @@ export async function handle(request, env) {
     case "POST /llt/redeem-cash": return json(await T.redeemForCash(db, book.id, await body(request)), 201);
     case "GET /llt/actions": return json(T.CREDIT_ACTIONS);
     case "GET /reports/llt": return json(await T.lltReport(db, book, q));
+    case "GET /reports/lifeluv": return json(await T.lltDashboard(db, book, q));
     case "POST /bank/import": return json(await K.importStatement(db, book.id, await body(request)), 201);
     case "GET /bank/lines": return json(await K.openLines(db, book.id));
     case "GET /export/beancount":

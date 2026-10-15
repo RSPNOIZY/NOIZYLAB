@@ -34,6 +34,19 @@ The real-money reports (profit and loss, balance sheet, sales tax) **never inclu
 
 **Keeping LLT non-fiscal is a design commitment, not only a setting.** `noizyfish/lifeluv/LIFELUV.md` currently says tokens are "redeemable for cash", and that LIFELUV workers are "paid in LIFELUV Credits + cash". Tokens that can be cashed out, or given in exchange for work, are likely to be treated as **taxable value**: income to the person who earns them, and possibly payroll, sales-tax or money-services obligations for NOIZY. A `fiscal` policy exists as scaffolding: it books each token at a declared fair value in 2600/6950 and allows cash redemption. Turn it on only after an accountant and a lawyer have reviewed the design.
 
+### LIFELUV dashboard: `/lifeluv`
+
+A dedicated page for the LIFELUV community (light and dark mode, works on phones):
+
+- **Headline figures:** tokens held by members, member count, tokens earned, redeemed and expired over the chosen period.
+- **Monthly chart:** tokens earned and redeemed each month, with hover tooltips and a table view.
+- **Members by tier:** Seed, Root, Branch, Canopy, Forest, based on lifetime tokens earned.
+- **Impact:** counts of what the community did, such as instruments restored, lessons taught and families registered.
+- **Members table**, plus forms to issue, redeem in-system and expire tokens.
+- **Public impact view:** shows aggregate numbers only, with no member names. Use it for partners, grant applications and the RBC brief.
+
+Data: `GET /api/books/:id/reports/lifeluv?months=6|12|24[&public=1]`.
+
 ## Accounts that match how artists actually earn
 
 So that the bookkeeper and the artist read the same numbers, the chart includes:

@@ -59,3 +59,21 @@ test("invoices carry the consent token they are paid under; export shows LLT", a
   assert.match(text, /Liabilities:A8100-LLT-Outstanding-Held-By-Members  -0\.200 LLT/);
   assert.ok(inv.total > 0);
 });
+
+test("LIFELUV dashboard: monthly series, impact, tiers, public view hides members", async () => {
+  const db = makeDB();
+  const b = await L.createBook(db, { name: "LIFELUV", jurisdiction: "CA-ON" });
+  for (let i = 0; i < 25; i++) await T.issue(db, b.id, { holder: "legend", date: "2026-09-10", action: "INTRO_MILITARY_PARTNER" }); // 25 LLT
+  await T.issue(db, b.id, { holder: "maria", date: "2026-10-01", action: "RESTORE_INSTRUMENT" });
+  await T.issue(db, b.id, { holder: "maria", date: "2026-10-02", action: "RESTORE_INSTRUMENT" });
+  await T.redeem(db, b.id, { holder: "maria", date: "2026-10-03", credits: "400" });
+  const d = await T.lltDashboard(db, b, { to: "2026-10-15", months: "3" });
+  assert.deepEqual(d.monthly.map((m) => m.month), ["2026-08", "2026-09", "2026-10"]);
+  assert.deepEqual(d.monthly[2], { month: "2026-10", issued: 1000, redeemed: 400, expired: 0 });
+  assert.equal(d.impact.find((i) => i.action === "RESTORE_INSTRUMENT").times, 2);
+  assert.equal(d.impact.find((i) => i.action === "RESTORE_INSTRUMENT").label, "Instruments restored");
+  assert.equal(d.tiers.find((t) => t.name === "Root").members, 1);   // legend: 25 LLT earned
+  assert.equal(d.tiers.find((t) => t.name === "Seed").members, 1);   // maria: 1 LLT earned
+  assert.equal(d.kpis.outstanding, 25600);
+  assert.equal((await T.lltDashboard(db, b, { public: "1" })).members, null);
+});
