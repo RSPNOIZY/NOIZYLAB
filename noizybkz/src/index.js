@@ -6,6 +6,7 @@ import { JURISDICTIONS, BkzError } from "./jurisdictions.js";
 import * as L from "./ledger.js";
 import * as R from "./reports.js";
 import { exportBeancount } from "./export.js";
+import * as T from "./llt.js";
 import { UI } from "./ui.js";
 
 const json = (body, status = 200) =>
@@ -65,6 +66,12 @@ export async function handle(request, env) {
     case "GET /reports/balance-sheet": return json(await R.balanceSheet(db, book, q));
     case "GET /reports/sales-tax": return json(await R.salesTaxReturn(db, book, q));
     case "GET /reports/aging": return json(await R.aging(db, book, q));
+    case "POST /llt/issue": return json(await T.issue(db, book.id, await body(request)), 201);
+    case "POST /llt/redeem": return json(await T.redeem(db, book.id, await body(request)), 201);
+    case "POST /llt/expire": return json(await T.expire(db, book.id, await body(request)), 201);
+    case "POST /llt/redeem-cash": return json(await T.redeemForCash(db, book.id, await body(request)), 201);
+    case "GET /llt/actions": return json(T.CREDIT_ACTIONS);
+    case "GET /reports/llt": return json(await T.lltReport(db, book, q));
     case "GET /export/beancount":
       return new Response(await exportBeancount(db, book), { headers: { "content-type": "text/plain; charset=utf-8" } });
   }

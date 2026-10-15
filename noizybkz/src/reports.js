@@ -7,24 +7,27 @@ import { jurisdiction } from "./jurisdictions.js";
 const FAR_PAST = "0000-01-01";
 const FAR_FUTURE = "9999-12-31";
 
-async function balances(db, bookId, from, to) {
+// Real-money reports only ever see accounts held in the book currency; LLT accounts
+// (unit 'LLT') have their own report in llt.js. Pass unit: "LLT" for an LLT trial balance.
+async function balances(db, bookId, from, to, unit = null) {
   const { results } = await db.prepare(`
     SELECT a.code, a.name, a.type, COALESCE(SUM(p.amount), 0) AS balance
     FROM accounts a
     LEFT JOIN postings p ON p.book_id = a.book_id AND p.account_code = a.code
       AND p.txn_id IN (SELECT id FROM txns WHERE book_id = ? AND date >= ? AND date <= ?)
-    WHERE a.book_id = ?
+    WHERE a.book_id = ? AND ${unit ? "a.unit = ?" : "a.unit IS NULL"}
     GROUP BY a.code, a.name, a.type
-    ORDER BY a.code`).bind(bookId, from, to, bookId).all();
+    ORDER BY a.code`).bind(...[bookId, from, to, bookId, ...(unit ? [unit] : [])]).all();
   return results;
 }
 
-export async function trialBalance(db, book, { as_of = FAR_FUTURE } = {}) {
-  const rows = (await balances(db, book.id, FAR_PAST, as_of)).filter((r) => r.balance !== 0);
+export async function trialBalance(db, book, { as_of = FAR_FUTURE, unit } = {}) {
+  const llt = unit === "LLT";
+  const rows = (await balances(db, book.id, FAR_PAST, as_of, llt ? "LLT" : null)).filter((r) => r.balance !== 0);
   const lines = rows.map((r) => ({ code: r.code, name: r.name, debit: r.balance > 0 ? r.balance : 0, credit: r.balance < 0 ? -r.balance : 0 }));
   const debit = lines.reduce((s, l) => s + l.debit, 0);
   const credit = lines.reduce((s, l) => s + l.credit, 0);
-  return { as_of, currency: book.currency, lines, totals: { debit, credit }, balanced: debit === credit };
+  return { as_of, currency: llt ? "LLT credits" : book.currency, lines, totals: { debit, credit }, balanced: debit === credit };
 }
 
 export async function profitAndLoss(db, book, { from = FAR_PAST, to = FAR_FUTURE } = {}) {

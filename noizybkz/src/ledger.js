@@ -4,7 +4,7 @@
 
 import { DEFAULT_CHART } from "./chart.js";
 import { BkzError, jurisdiction } from "./jurisdictions.js";
-import { allocate, applyRate, cents, isoDate } from "./money.js";
+import { allocate, applyRate, cents, isoDate, places } from "./money.js";
 import { salesTaxReturn } from "./reports.js";
 
 const now = () => new Date().toISOString();
@@ -17,32 +17,41 @@ export async function getBook(db, bookId) {
   return book;
 }
 
-export async function createBook(db, { name, jurisdiction: code }) {
+// llt_policy: "non-fiscal" (default) — LIFELUV Tokens are tracked in their own unit and
+// can never be redeemed for cash. "fiscal" — tokens carry a declared fair value
+// (llt_fmv per token), every issue also books that value in the currency, and cash
+// redemption is allowed. See README "LIFELUV Tokens" for the tax consequences.
+export async function createBook(db, { name, jurisdiction: code, llt_policy = "non-fiscal", llt_fmv }) {
   if (!name || typeof name !== "string") throw new BkzError(400, "name is required");
   const j = jurisdiction(code);
+  if (!["non-fiscal", "fiscal"].includes(llt_policy)) throw new BkzError(400, "llt_policy must be non-fiscal or fiscal");
+  const fmv = llt_policy === "fiscal" ? cents(llt_fmv, "llt_fmv") : null;
+  if (llt_policy === "fiscal" && fmv <= 0) throw new BkzError(400, "a fiscal LLT policy needs llt_fmv (fiat value of 1 LLT) above zero");
   const id = uid();
   await db.batch([
-    db.prepare("INSERT INTO books (id, name, jurisdiction, currency, created_at) VALUES (?, ?, ?, ?, ?)")
-      .bind(id, name.slice(0, 200), code, j.currency, now()),
-    ...DEFAULT_CHART.map(([c, n, t]) =>
-      db.prepare("INSERT INTO accounts (book_id, code, name, type) VALUES (?, ?, ?, ?)").bind(id, c, n, t)),
+    db.prepare("INSERT INTO books (id, name, jurisdiction, currency, created_at, llt_policy, llt_fmv_cents) VALUES (?, ?, ?, ?, ?, ?, ?)")
+      .bind(id, name.slice(0, 200), code, j.currency, now(), llt_policy, fmv),
+    ...DEFAULT_CHART.map(([c, n, t, u = null]) =>
+      db.prepare("INSERT INTO accounts (book_id, code, name, type, unit) VALUES (?, ?, ?, ?, ?)").bind(id, c, n, t, u)),
   ]);
   return getBook(db, id);
 }
 
 export async function listAccounts(db, bookId) {
-  const { results } = await db.prepare("SELECT code, name, type FROM accounts WHERE book_id = ? ORDER BY code").bind(bookId).all();
-  return results;
+  const book = await getBook(db, bookId);
+  const { results } = await db.prepare("SELECT code, name, type, unit FROM accounts WHERE book_id = ? ORDER BY code").bind(bookId).all();
+  return results.map((a) => ({ ...a, unit: a.unit || book.currency }));
 }
 
-export async function addAccount(db, bookId, { code, name, type }) {
+export async function addAccount(db, bookId, { code, name, type, unit = null }) {
+  if (unit !== null && unit !== "LLT") throw new BkzError(400, "unit must be omitted (book currency) or LLT");
   if (!/^\d{4,6}$/.test(code || "")) throw new BkzError(400, "code must be 4–6 digits");
   if (!ACCOUNT_TYPES.includes(type)) throw new BkzError(400, `type must be one of ${ACCOUNT_TYPES.join(", ")}`);
   if (!name) throw new BkzError(400, "name is required");
   const exists = await db.prepare("SELECT 1 FROM accounts WHERE book_id = ? AND code = ?").bind(bookId, code).first();
   if (exists) throw new BkzError(409, `account ${code} already exists`);
-  await db.prepare("INSERT INTO accounts (book_id, code, name, type) VALUES (?, ?, ?, ?)").bind(bookId, code, name.slice(0, 200), type).run();
-  return { code, name, type };
+  await db.prepare("INSERT INTO accounts (book_id, code, name, type, unit) VALUES (?, ?, ?, ?, ?)").bind(bookId, code, name.slice(0, 200), type, unit).run();
+  return { code, name, type, unit: unit || (await getBook(db, bookId)).currency };
 }
 
 async function accountSet(db, bookId) {
@@ -55,13 +64,16 @@ async function txnStatements(db, bookId, { date, description, kind, ref = null, 
   if (!description) throw new BkzError(400, "description is required");
   if (!Array.isArray(postings) || postings.length < 2) throw new BkzError(400, "a transaction needs at least two postings");
   const accounts = await accountSet(db, bookId);
-  let sum = 0;
+  const sums = new Map(); // each unit (currency, LLT) must balance on its own
   for (const p of postings) {
-    if (!accounts.has(p.account)) throw new BkzError(400, `unknown account ${p.account}`);
+    const a = accounts.get(p.account);
+    if (!a) throw new BkzError(400, `unknown account ${p.account}`);
     if (!Number.isInteger(p.amount) || p.amount === 0) throw new BkzError(400, "posting amounts must be non-zero");
-    sum += p.amount;
+    sums.set(a.unit, (sums.get(a.unit) || 0) + p.amount);
   }
-  if (sum !== 0) throw new BkzError(400, `transaction does not balance (off by ${sum} cents)`);
+  for (const [unit, sum] of sums) {
+    if (sum !== 0) throw new BkzError(400, `transaction does not balance in ${unit} (off by ${sum} minor units)`);
+  }
   const id = uid();
   return {
     id,
@@ -69,15 +81,27 @@ async function txnStatements(db, bookId, { date, description, kind, ref = null, 
       db.prepare("INSERT INTO txns (id, book_id, date, description, kind, ref, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)")
         .bind(id, bookId, date, description.slice(0, 500), kind, ref, now()),
       ...postings.map((p) =>
-        db.prepare("INSERT INTO postings (txn_id, book_id, account_code, amount, tag, memo) VALUES (?, ?, ?, ?, ?, ?)")
-          .bind(id, bookId, p.account, p.amount, p.tag ?? null, p.memo ?? null)),
+        db.prepare("INSERT INTO postings (txn_id, book_id, account_code, amount, tag, memo, party) VALUES (?, ?, ?, ?, ?, ?, ?)")
+          .bind(id, bookId, p.account, p.amount, p.tag ?? null, p.memo ?? null, p.party ?? null)),
     ],
   };
 }
 
 export async function postJournal(db, bookId, { date, description, postings }) {
-  const parsed = (postings || []).map((p, i) => ({ account: p.account, amount: cents(p.amount, `postings[${i}].amount`), memo: p.memo }));
+  const accounts = await accountSet(db, bookId);
+  const parsed = (postings || []).map((p, i) => ({
+    account: p.account,
+    amount: cents(p.amount, `postings[${i}].amount`, places(accounts.get(p.account)?.unit)),
+    memo: p.memo,
+  }));
   const t = await txnStatements(db, bookId, { date, description, kind: "journal", postings: parsed });
+  await db.batch(t.statements);
+  return getTxn(db, bookId, t.id);
+}
+
+// For modules that build their own balanced postings (LLT). Not exposed to the API.
+export async function postInternal(db, bookId, { date, description, kind, postings }) {
+  const t = await txnStatements(db, bookId, { date, description, kind, postings });
   await db.batch(t.statements);
   return getTxn(db, bookId, t.id);
 }
@@ -85,7 +109,7 @@ export async function postJournal(db, bookId, { date, description, postings }) {
 export async function getTxn(db, bookId, txnId) {
   const txn = await db.prepare("SELECT * FROM txns WHERE id = ? AND book_id = ?").bind(txnId, bookId).first();
   if (!txn) throw new BkzError(404, "transaction not found");
-  const { results } = await db.prepare("SELECT account_code AS account, amount, tag, memo FROM postings WHERE txn_id = ? ORDER BY id").bind(txnId).all();
+  const { results } = await db.prepare("SELECT account_code AS account, amount, tag, memo, party FROM postings WHERE txn_id = ? ORDER BY id").bind(txnId).all();
   return { ...txn, postings: results };
 }
 
@@ -103,6 +127,7 @@ function computeDoc(book, lines, accounts, allowedTypes) {
     const a = accounts.get(l.account);
     if (!a) throw new BkzError(400, `lines[${i}]: unknown account ${l.account}`);
     if (!allowedTypes.includes(a.type)) throw new BkzError(400, `lines[${i}]: account ${l.account} is ${a.type}, expected ${allowedTypes.join("/")}`);
+    if (a.unit !== book.currency) throw new BkzError(400, `lines[${i}]: account ${l.account} is held in ${a.unit}; invoices and bills are in ${book.currency}`);
     const amount = cents(l.amount, `lines[${i}].amount`);
     if (amount <= 0) throw new BkzError(400, `lines[${i}].amount must be positive`);
     return { account: l.account, description: l.description || "", amount, taxable: l.taxable !== false };
@@ -118,7 +143,7 @@ function computeDoc(book, lines, accounts, allowedTypes) {
 
 async function createDoc(db, bookId, kind, input) {
   const book = await getBook(db, bookId);
-  const { number, party, date, due = null } = input;
+  const { number, party, date, due = null, consent_ref = null } = input;
   if (!number || !party) throw new BkzError(400, "number and party are required");
   isoDate(date);
   if (due) isoDate(due, "due");
@@ -149,10 +174,10 @@ async function createDoc(db, bookId, kind, input) {
   });
   await db.batch([
     ...t.statements,
-    db.prepare("INSERT INTO docs (id, book_id, kind, number, party, date, due, total, paid, txn_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?)")
-      .bind(docId, bookId, kind, String(number).slice(0, 50), String(party).slice(0, 200), date, due, doc.total, t.id),
+    db.prepare("INSERT INTO docs (id, book_id, kind, number, party, date, due, total, paid, txn_id, consent_ref) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?)")
+      .bind(docId, bookId, kind, String(number).slice(0, 50), String(party).slice(0, 200), date, due, doc.total, t.id, consent_ref ? String(consent_ref).slice(0, 100) : null),
   ]);
-  return { id: docId, kind, number, party, date, due, net: doc.net, taxes: doc.taxes.map(({ code, amount }) => ({ code, amount })), total: doc.total, paid: 0, txn_id: t.id };
+  return { id: docId, kind, number, party, date, due, consent_ref, net: doc.net, taxes: doc.taxes.map(({ code, amount }) => ({ code, amount })), total: doc.total, paid: 0, txn_id: t.id };
 }
 
 export const createInvoice = (db, bookId, input) => createDoc(db, bookId, "invoice", input);

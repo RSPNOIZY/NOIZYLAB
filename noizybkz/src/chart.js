@@ -1,5 +1,7 @@
 // Default small-business chart of accounts. Codes are referenced by the tax packs
-// (1300, 1330, 2300, 2320, 2330) and by the document flows (1000, 1100, 2000, 3900).
+// (1300, 1330, 2300, 2320, 2330), the document flows (1000, 1100, 2000) and the
+// LIFELUV Token ledger (8xxx in LLT; 2600 and 6950 carry LLT's fiat value under the
+// fiscal policy). Entries: [code, name, type, unit?] — no unit means the book currency.
 
 export const DEFAULT_CHART = [
   ["1000", "Bank — chequing", "ASSET"],
@@ -15,6 +17,7 @@ export const DEFAULT_CHART = [
   ["2320", "PST/RST payable", "LIABILITY"],
   ["2330", "QST payable", "LIABILITY"],
   ["2500", "Payroll liabilities", "LIABILITY"],
+  ["2550", "Union pension and health (P&H) contributions payable", "LIABILITY"],
   ["2700", "Loans payable", "LIABILITY"],
   ["3000", "Owner's capital", "EQUITY"],
   ["3100", "Owner's drawings", "EQUITY"],
@@ -22,6 +25,8 @@ export const DEFAULT_CHART = [
   ["4000", "Sales", "INCOME"],
   ["4100", "Services", "INCOME"],
   ["4200", "Licensing and royalties", "INCOME"],
+  ["4300", "Residuals", "INCOME"],
+  ["4400", "Session and performance fees", "INCOME"],
   ["4900", "Other income", "INCOME"],
   ["5000", "Cost of goods sold", "EXPENSE"],
   ["6000", "Advertising and marketing", "EXPENSE"],
@@ -30,6 +35,8 @@ export const DEFAULT_CHART = [
   ["6200", "Meals and entertainment", "EXPENSE"],
   ["6300", "Office supplies", "EXPENSE"],
   ["6400", "Professional fees", "EXPENSE"],
+  ["6420", "Agent and manager commissions", "EXPENSE"],
+  ["6430", "Union dues and initiation fees", "EXPENSE"],
   ["6500", "Rent", "EXPENSE"],
   ["6550", "Utilities", "EXPENSE"],
   ["6600", "Software and subscriptions", "EXPENSE"],
@@ -39,4 +46,11 @@ export const DEFAULT_CHART = [
   ["7000", "Wages and salaries", "EXPENSE"],
   ["7500", "Depreciation", "EXPENSE"],
   ["7900", "Other expenses", "EXPENSE"],
+  ["2600", "LLT redemption liability (fiat value)", "LIABILITY"],
+  ["6950", "LLT contributor rewards (fiat value)", "EXPENSE"],
+  ["8100", "LLT outstanding (held by members)", "LIABILITY", "LLT"],
+  ["8500", "LLT rewards issued", "EXPENSE", "LLT"],
+  ["8600", "LLT redeemed in-system", "INCOME", "LLT"],
+  ["8650", "LLT redeemed for cash", "INCOME", "LLT"],
+  ["8700", "LLT expired or forfeited", "INCOME", "LLT"],
 ];

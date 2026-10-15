@@ -19,6 +19,31 @@ Owner: Robert Stephen Plowman · Licence: **AGPL-3.0-or-later**
 | **Interface** | Built-in web page (light and dark mode, works on phones) and a JSON API |
 | **Security** | Every API call needs a token, and the API refuses everything if no token is configured. Use Cloudflare Access in front of it as well |
 
+## LIFELUV Tokens (LLT): internal, non-fiscal
+
+LLT is a **second ledger kept in its own unit**, next to the real-money books and never mixed with them. Every transaction must balance separately in each unit, so a token can't quietly turn into dollars.
+
+| Event | LLT side (credits; 1 LLT = 1,000 credits) |
+|---|---|
+| Earn (14 actions from `LifeluvToken.ts`, or a set number of credits) | Dr 8500 LLT rewards issued · Cr 8100 LLT outstanding (held by the member) |
+| Redeem inside the system (voice credits, lessons, compute) | Dr 8100 · Cr 8600 |
+| Expire or forfeit | Dr 8100 · Cr 8700 |
+| **Cash redemption** | **Refused** (`403`) while the book's policy is `non-fiscal`, which is the default |
+
+The real-money reports (profit and loss, balance sheet, sales tax) **never include LLT**. Use `GET /reports/llt` for balances per member and token flows, and `trial-balance?unit=LLT` for the token trial balance.
+
+**Keeping LLT non-fiscal is a design commitment, not only a setting.** `noizyfish/lifeluv/LIFELUV.md` currently says tokens are "redeemable for cash", and that LIFELUV workers are "paid in LIFELUV Credits + cash". Tokens that can be cashed out, or given in exchange for work, are likely to be treated as **taxable value**: income to the person who earns them, and possibly payroll, sales-tax or money-services obligations for NOIZY. A `fiscal` policy exists as scaffolding: it books each token at a declared fair value in 2600/6950 and allows cash redemption. Turn it on only after an accountant and a lawyer have reviewed the design.
+
+## Accounts that match how artists actually earn
+
+So that the bookkeeper and the artist read the same numbers, the chart includes:
+
+- **Income:** 4200 Licensing and royalties, 4300 Residuals, 4400 Session and performance fees.
+- **Expenses:** 6420 Agent and manager commissions, 6430 Union dues and initiation fees.
+- **Liability:** 2550 Union pension and health (P&H) contributions payable.
+
+Invoices can carry `consent_ref`, the HEAVEN consent token the work is licensed under. That links each payment to the exact consent behind it. See `docs/consent/UNION-BEST-PRACTICES.md`.
+
 ## Deploy
 
 Put this in the NOIZYFISH Cloudflare account once job CF00 is settled.
@@ -26,7 +51,7 @@ Put this in the NOIZYFISH Cloudflare account once job CF00 is settled.
 ```bash
 cd noizybkz
 npx wrangler d1 create noizybkz                       # copy database_id into wrangler.jsonc
-npx wrangler d1 migrations apply noizybkz --remote
+npx wrangler d1 migrations apply noizybkz --remote     # applies 0001 and 0002
 npx wrangler secret put BKZ_TOKEN                     # value stored in VAULT-OPS
 npx wrangler deploy
 ```
@@ -44,6 +69,10 @@ POST /api/books/:id/payments          {doc_id, date, amount, bank?}
 POST /api/books/:id/journal           {date, description, postings:[{account, amount:"-50.00"}]}
 POST /api/books/:id/remittances       {family:"GSTHST"|"QST"|"PST", from, to, date}
 POST /api/books/:id/txns/:tid/reverse {date?, reason?}
+POST /api/books/:id/llt/issue          {holder, date, action | credits}
+POST /api/books/:id/llt/redeem | /expire {holder, date, credits, note?}
+POST /api/books/:id/llt/redeem-cash    (refused unless llt_policy = fiscal)
+GET  /api/books/:id/llt/actions        GET /api/books/:id/reports/llt
 GET  /api/books/:id/reports/{trial-balance|profit-loss|balance-sheet|sales-tax|aging}?from&to&as_of
 GET  /api/books/:id/export/beancount
 ```
