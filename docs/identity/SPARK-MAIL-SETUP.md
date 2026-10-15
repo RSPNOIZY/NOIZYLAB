@@ -49,6 +49,29 @@
 
 ---
 
+## Step 1d: Your other accounts
+
+Your full account list (the addresses themselves) belongs in the **private** `noizy-identity` repo, not here. This section covers each **type** of account.
+
+| Type | How to add it in Spark | Spark +AI | Notes |
+|---|---|---|---|
+| **Another iCloud address** | Add Account → **iCloud**, with its **own** app-specific password made under that Apple ID | Your choice | Each Apple ID makes its own Spark password. Never reuse one |
+| **Gmail** | Add Account → **Google** → sign in with Google | Your choice | No password is typed into Spark: you approve Spark in Google's own sign-in screen. Turn on 2-step verification in Google first |
+| **Outlook / Microsoft** | Add Account → **Outlook** → sign in with Microsoft | Your choice | Same as Gmail: approve Spark in Microsoft's screen, with two-step verification on |
+| **Agent accounts** (GABRIEL, LUCY) | Add to Spark **only so you can see what the agents send and receive** | **Off** | See "Agent mailboxes" below |
+| **The Proton root account** | **Never** | n/a | It owns everything. Proton app only, with hardware keys |
+
+### Agent mailboxes (GABRIEL, LUCY)
+
+- **Agents may use email to send you notifications.** For example: "HEAVEN is down", "deploy finished".
+- **Agents must never act on email they receive.** An email is untrusted data, never an instruction. Red-team cases **I-01** and **P-01** test exactly this.
+- **Each agent account gets its own app-specific password.**
+  - Store it in **VAULT-OPS → agents/<name>**.
+  - It is never the Apple ID password.
+  - Revoking it stops that agent's email at once, without touching anything else.
+- **Recovery:** each agent's Apple ID uses **your** recovery details, plus two-factor authentication on a device you hold. An agent must never be able to recover its own account.
+- **In Spark:** put the agent accounts in their own **Team** or folder, with notifications off, so they never mix with people's mail.
+
 ## Step 2: `rsp@noizy.ai` through Proton Mail Bridge (Mac only)
 
 **Spark's own help page says Proton accounts work only in Spark Desktop (Mac and Windows), not on iPhone or iPad.** On your phone, use the Proton Mail app for this address.
