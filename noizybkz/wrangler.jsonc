@@ -1,0 +1,14 @@
+{
+  // NOIZYBKZ on Cloudflare Workers + D1. Deploy into the NOIZYFISH account once CF00 is settled.
+  //   npx wrangler d1 create noizybkz            → paste database_id below
+  //   npx wrangler d1 migrations apply noizybkz --remote
+  //   npx wrangler secret put BKZ_TOKEN          → value lives in VAULT-OPS
+  //   npx wrangler deploy
+  "name": "noizybkz",
+  "main": "src/index.js",
+  "compatibility_date": "2026-10-01",
+  "d1_databases": [
+    { "binding": "DB", "database_name": "noizybkz", "database_id": "<D1_DATABASE_ID>", "migrations_dir": "migrations" }
+  ],
+  "observability": { "enabled": true }
+}
