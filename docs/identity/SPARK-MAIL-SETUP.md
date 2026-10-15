@@ -101,12 +101,17 @@ Your full account list (the addresses themselves) belongs in the **private** `no
 
 ---
 
-## Step 3 (optional): Gmail for public brand mail
+## Step 3: the brand Gmail (decided: all brand mail)
 
-- Only if you decide you want brand mail on your phone in Spark (decision D1).
-- The Cloudflare mail hub sends a copy of public `hello@` mail to this Gmail.
-- **Consent mail and NOIZYKIDZ mail never go there** (`ai: never` in `aliases.yaml`).
-- Add it in Spark → **Add Account → Google**.
+- **Decision D1 (2026-10-15):** the **brand Gmail** receives a copy of **all brand mail**. Its address is in the private `noizy-identity` repo.
+- **How it gets there:** the Cloudflare mail hub forwards each brand address to it, and keeps a copy in Proton.
+- **Not included until RSP_001 says so:** consent mail and NOIZYKIDZ mail (`ai: never` in `aliases.yaml`).
+- **Set it up:**
+  1. Turn on **2-step verification** in that Google account.
+  2. In Spark: **Add Account → Google** → sign in. No password goes into Spark.
+  3. Add each brand address as an **alias** in Gmail first (Gmail → Settings → Accounts → "Send mail as"), then in Spark. Now you can reply as `hello@noizyfish.com` and so on.
+  4. **Spark +AI:** fine for this account, because it holds public brand mail only.
+- **Gmail filters (labels):** one label per brand (NOIZYFISH, NOIZYLAB, NOIZYWORLD, FISHMUSICINC), matching the "To" address.
 
 ---
 

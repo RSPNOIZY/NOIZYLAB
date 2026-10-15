@@ -56,15 +56,15 @@ noizy-identity/            (PRIVATE; holds the alias map and policy, never secre
 # destination keys resolve to verified Email Routing destinations
 destinations:
   proton: rsp@noizy.ai          # Proton working inbox (E2EE)
-  spark:  <gmail-for-spark>     # optional, public intake only; see D1
+  spark:  <brand-gmail>         # D1 decided 2026-10-15: the brand Gmail gets ALL brand mail (real address lives in the private noizy-identity repo)
 
 aliases:
   - { address: hello@noizyfish.com,     to: [proton, spark] }
-  - { address: licensing@noizyfish.com, to: [proton] }
-  - { address: rsp@fishmusicinc.com,    to: [proton] }      # brand map says this bounced (550): recreate here
+  - { address: licensing@noizyfish.com, to: [proton, spark] }
+  - { address: rsp@fishmusicinc.com,    to: [proton, spark] } # brand map says this bounced (550): recreate here
   - { address: hello@noizylab.ca,       to: [proton, spark] }
   - { address: hello@noizyworld.com,    to: [proton, spark] }
-  - { address: orders@noizyworld.com,   to: [proton], agent: commerce }
+  - { address: orders@noizyworld.com,   to: [proton, spark], agent: commerce }
   - { address: consent@noizyvox.com,    to: [proton], agent: heaven-ledger, ai: never }
   - { address: hello@noizyvox.com,      to: [proton], ai: never }
 catch_all: reject                       # unknown addresses bounce; nothing is accepted silently
@@ -87,6 +87,10 @@ catch_all: reject                       # unknown addresses bounce; nothing is a
 
 ## 5. Decisions
 
-- **D1 (revised):** if Spark should work on the phone, the hub can send a copy of *public intake* (the `hello@` addresses) to a Gmail account that Spark connects to natively. Mail marked `ai: never` never goes there. **Recommended:** yes for `hello@`, never for consent or kids' mail.
+- **D1 (decided 2026-10-15):** **all brand mail** also goes to the **brand Gmail**, which Spark reads on every device.
+  - **Kept off Gmail, pending RSP_001's explicit OK:** the three `ai: never` addresses (`consent@noizyvox.com`, `hello@noizyvox.com`, NOIZYKIDZ).
+    - They hold consent records, and children's and families' mail.
+    - Google would store them, and Spark AI could read them.
+  - **To include them anyway:** change `to:` to `[proton, spark]` and remove `ai: never`.
 - **D5:** routing everything to `noizyworld@proton.me` conflicts with "the root account never handles daily mail." **Recommended:** route to `rsp@noizy.ai`, and keep noizyworld as the account that owns everything.
 - **D6:** whether this repository (`NOIZYLAB`) is public. The alias map and token policy belong in the **private** `noizy-identity` repository.
