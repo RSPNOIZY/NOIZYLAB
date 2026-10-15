@@ -13,7 +13,7 @@ class Stmt {
 
 export function makeDB() {
   const db = new DatabaseSync(":memory:");
-  for (const m of ["0001_init.sql", "0002_llt.sql"]) db.exec(readFileSync(new URL(`../migrations/${m}`, import.meta.url), "utf8"));
+  for (const m of ["0001_init.sql", "0002_llt.sql", "0003_bank.sql"]) db.exec(readFileSync(new URL(`../migrations/${m}`, import.meta.url), "utf8"));
   return {
     prepare: (sql) => new Stmt(db, sql),
     async batch(stmts) {

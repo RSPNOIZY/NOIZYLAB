@@ -7,6 +7,7 @@ import * as L from "./ledger.js";
 import * as R from "./reports.js";
 import { exportBeancount } from "./export.js";
 import * as T from "./llt.js";
+import * as K from "./bank.js";
 import { UI } from "./ui.js";
 
 const json = (body, status = 200) =>
@@ -72,9 +73,13 @@ export async function handle(request, env) {
     case "POST /llt/redeem-cash": return json(await T.redeemForCash(db, book.id, await body(request)), 201);
     case "GET /llt/actions": return json(T.CREDIT_ACTIONS);
     case "GET /reports/llt": return json(await T.lltReport(db, book, q));
+    case "POST /bank/import": return json(await K.importStatement(db, book.id, await body(request)), 201);
+    case "GET /bank/lines": return json(await K.openLines(db, book.id));
     case "GET /export/beancount":
       return new Response(await exportBeancount(db, book), { headers: { "content-type": "text/plain; charset=utf-8" } });
   }
+  const bl = sub.match(/^\/bank\/lines\/([0-9a-f-]{36})\/post$/);
+  if (bl && m === "POST") return json(await K.postLine(db, book.id, bl[1], await body(request)), 201);
   const txn = sub.match(/^\/txns\/([0-9a-f-]{36})(\/reverse)?$/);
   if (txn && m === "GET" && !txn[2]) return json(await L.getTxn(db, book.id, txn[1]));
   if (txn && m === "POST" && txn[2]) return json(await L.reverseTxn(db, book.id, txn[1], await body(request)), 201);

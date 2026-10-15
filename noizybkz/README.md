@@ -51,7 +51,7 @@ Put this in the NOIZYFISH Cloudflare account once job CF00 is settled.
 ```bash
 cd noizybkz
 npx wrangler d1 create noizybkz                       # copy database_id into wrangler.jsonc
-npx wrangler d1 migrations apply noizybkz --remote     # applies 0001 and 0002
+npx wrangler d1 migrations apply noizybkz --remote     # applies 0001–0003
 npx wrangler secret put BKZ_TOKEN                     # value stored in VAULT-OPS
 npx wrangler deploy
 ```
@@ -73,6 +73,8 @@ POST /api/books/:id/llt/issue          {holder, date, action | credits}
 POST /api/books/:id/llt/redeem | /expire {holder, date, credits, note?}
 POST /api/books/:id/llt/redeem-cash    (refused unless llt_policy = fiscal)
 GET  /api/books/:id/llt/actions        GET /api/books/:id/reports/llt
+POST /api/books/:id/bank/import        {format:"qfx"|"ofx"|"csv", content, bank?}   (Tangerine exports work)
+GET  /api/books/:id/bank/lines         POST /api/books/:id/bank/lines/:lid/post {account}
 GET  /api/books/:id/reports/{trial-balance|profit-loss|balance-sheet|sales-tax|aging}?from&to&as_of
 GET  /api/books/:id/export/beancount
 ```
@@ -93,7 +95,7 @@ npm test     # Node ≥ 22.13; uses node:sqlite to stand in for D1
 
 ## Roadmap
 
-1. **v0.2:** place-of-supply (tax by the customer's province), credit notes, voiding documents, bank CSV import and matching, and closing a fiscal year to retained earnings.
+1. **v0.2:** place-of-supply (tax by the customer's province), credit notes, voiding documents, rules that file bank lines automatically and match them to invoices, and closing a fiscal year to retained earnings. Bank import (QFX/OFX/CSV with de-duplication) is **done**.
 2. **v0.3:** multi-currency at the Bank of Canada daily rate, PDF invoices, recurring invoices, and invoices sent by email through Cloudflare Email Sending (see `docs/identity/MAIL-HUB-SPEC.md`).
 3. **v0.4:** a QST return (FPZ-500) view, a mapping to the T2125 business statement, and US sales tax by state (complex; it will need an open dataset).
 4. **v0.5:** roles and permissions per book, an audit log, and checking the HALT kill switch before automated jobs.
