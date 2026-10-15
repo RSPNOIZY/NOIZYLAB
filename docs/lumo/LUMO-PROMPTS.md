@@ -1,5 +1,7 @@
 # Lumo: Role and Prompts
 
+> **Update (2026-10-15):** Lumo 2.0 adds **Custom Lumos**: saved instructions plus files, available only in the web app. Workspace Premium includes Lumo. The three main assistants (Vaultkeeper, Inbox Triage and License Clerk) are defined in `docs/identity/NOIZY-VAULT-SPEC.md` §2. The Projects and prompts below are for ad-hoc work. A Lumo connection to Proton Mail or Calendar is **not confirmed** by any official source I found, so check in the app.
+
 **Owner:** Robert Stephen Plowman
 
 ## What Lumo is good for (checked October 2026)

@@ -7,12 +7,19 @@
 |---|---|---|---|---|
 | 0 | **NOIZYWORLD-ROOT** | Robert Stephen Plowman in the browser (Proton has no API) | none | noizyworld@proton.me is confirmed as org owner; hardware keys added; recovery kit printed and kept offline; **noizy.ai** added as a custom domain (only noizy.ai; see `MAIL-HUB-SPEC.md` §2) |
 | 1 | **CF00**: one Cloudflare account | Robert Stephen Plowman logs in; Claude Code then checks | Job 0 | Every MCP connector, `wrangler` and the `cf` tool point at the **NOIZYFISH account** (`5f36aa97…`, per `HEAVEN.md`), which holds HEAVEN. *Checked 2026-10-15: the Cloudflare connector in this session lists **0 Workers**, so it is pointed at the empty account* |
-| 2 | **HEAVEN01**: deploy | Claude Code with `wrangler` | Job 1 | `GET /health` returns 200; an authenticated request with `X-NOIZY-Key` returns 200 (not 401); the deployed version matches the source |
+| 1b | **HALT00**: kill switch | Claude Code | Job 1 | `workers/halt` is deployed; `HALT_KEY` and `RESUME_KEY` are set from VAULT-OPS; every agent and n8n job runs `scripts/halt/halt_check.sh` first; one halt-and-resume drill has been done. **No agent job (Jobs 2–4) runs before this is done** |
+| 2 | **HEAVEN01**: deploy | Claude Code with `wrangler` | Job 1b | `GET /health` returns 200; an authenticated request with `X-NOIZY-Key` returns 200 (not 401); the deployed version matches the source |
 | 3 | **MAIL01**: hub | Claude Code; Robert Stephen Plowman verifies destinations | Job 1 (can run alongside Job 2) | The `noizy-identity` repo exists; mail-hub is deployed; every address in `aliases.yaml` delivers a test message; unknown addresses bounce |
 | 4 | **COMMS01**: Slack and Discord | Claude Code | Job 2 | The Slack bot and 6 Discord bots answer through the `comms` Worker; a test HEAVEN event shows up in `#noizyai-consent-events` |
 | 5 | **PRUNE00**: licence stage | Desktop Commander on the Mac | none (can run alongside the others) | `apps.tsv` is reviewed by voice; verdicts are tagged in TagSpaces |
 | 6 | **FIRE00**: Firebase 3-day plan | Robert Stephen Plowman and Claude Code | none (can run alongside the others) | `docs/firebase/3-DAY-CONSOLIDATION-PLAN.md`, Day 3 checkpoint |
 | 7 | **WAVE01**: research watch | n8n RSS | none | Feeds are live (see below) |
+
+### Tonight (2026-10-15): two tracks in parallel
+
+- **Robert Stephen Plowman, in the browser:** Job 0 (NOIZYWORLD-ROOT), and the CF00 question: **which login owns the NOIZYFISH / Fish Music account (`5f36aa97…`) and its zones?**
+- **Writing, for review by voice tomorrow:** the vault spec (Custom Lumos, kill switch, legal hold, continuity page), Prune00 and COMMS01. These are drafted in this PR.
+- **Waits on the CF00 answer:** HALT00, the HEAVEN01 deploy, and any DNS changes.
 
 ---
 
@@ -84,6 +91,7 @@ Slack Events / Discord Interactions
 
 | Source | Topic |
 |---|---|
+| Proton blog and changelog | **Lumo API release** (the day it ships, review whether SHIRL gets read-only access to Vaultkeeper); Drive CLI and SDK changes; Lumo Mail and Calendar connectors |
 | Hugging Face (daily papers and trending models) | Upgrades for the classification, speech-to-text and voice layers |
 | Kaggle (datasets) | Haptic and audio datasets |
 | MIT, Boston University, Boston College | Haptics and neural interfaces: lab news, theses, open-source code releases |
