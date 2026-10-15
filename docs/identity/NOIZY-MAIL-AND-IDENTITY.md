@@ -79,6 +79,8 @@ The working rule is that a person reads two inboxes, and everything else is an a
 
 ## Ring 3: Brand aliases
 
+> **Replaced by `MAIL-HUB-SPEC.md`:** only noizy.ai moves to Proton. The other brand domains go through the Cloudflare hub, and the alias map lives in git.
+
 Each of these is an extra address on the `rsp@` user in Proton. It needs no inbox of its own, and you can reply from it.
 
 | Domain | Addresses | Delivers to | Spark AI |
@@ -112,6 +114,8 @@ What this rests on (check against current Proton and Readdle documentation befor
 ---
 
 ## Cloudflare DNS: per domain
+
+> These records apply to **noizy.ai only**. See `MAIL-HUB-SPEC.md` for the other domains.
 
 All seven domains already use Cloudflare DNS. For each domain moving to Proton:
 
