@@ -57,6 +57,30 @@ So that the bookkeeper and the artist read the same numbers, the chart includes:
 
 Invoices can carry `consent_ref`, the HEAVEN consent token the work is licensed under. That links each payment to the exact consent behind it. See `docs/consent/UNION-BEST-PRACTICES.md`.
 
+## Artist royalties
+
+- **Parties:** artists, writers and producers, with their **IPN, ISNI and IPI** numbers.
+- **Works:** title, ISRC/ISWC, the **HEAVEN consent token**, and a **split sheet**.
+  - Splits must add up to exactly 100%.
+  - Shortcut: `covenant: {party_id}` sets 75% to the artist and 25% to the house.
+- **Advances:** paid now, and **recouped automatically** from that artist's future royalties.
+- **Royalty receipts:** each payment is divided by the split sheet, down to the penny. The house share stays as NOIZY income.
+- **Payouts and statements:** for each artist, what they earned, what was recouped, what was paid, what is still owing, and any unrecouped advance.
+
+## CRA T2125 (self-employed artists)
+
+- **Draft T2125 lines** come straight from the profit and loss: 8000, 8230 and 8299 for income; 8521 to 9281 for expenses; 9368 and 9369 for the totals.
+- **Meals are cut to 50%** automatically.
+- **Book depreciation is flagged:** replace it with capital cost allowance (CCA).
+- **CSV download** for your accountant, plus a T2125 tab in the web page.
+- **Check every line number** against the current form on canada.ca before filing.
+
+## Other upgrades
+
+- **Year-end close:** income and expenses move into retained earnings, and the period is **locked**, so nothing can be posted into it afterwards.
+- **Place of supply:** an Ontario book selling to a Quebec customer charges GST and QST, and both show on the tax return.
+- **Always on:** a nightly backup of every book to R2 (a Cloudflare Cron Trigger). It **checks HALT first** and does nothing if HALT can't be confirmed.
+
 ## Deploy
 
 Put this in the NOIZYFISH Cloudflare account once job CF00 is settled.
@@ -64,7 +88,7 @@ Put this in the NOIZYFISH Cloudflare account once job CF00 is settled.
 ```bash
 cd noizybkz
 npx wrangler d1 create noizybkz                       # copy database_id into wrangler.jsonc
-npx wrangler d1 migrations apply noizybkz --remote     # applies 0001–0003
+npx wrangler d1 migrations apply noizybkz --remote     # applies 0001–0004
 npx wrangler secret put BKZ_TOKEN                     # value stored in VAULT-OPS
 npx wrangler deploy
 ```
@@ -88,6 +112,9 @@ POST /api/books/:id/llt/redeem-cash    (refused unless llt_policy = fiscal)
 GET  /api/books/:id/llt/actions        GET /api/books/:id/reports/llt
 POST /api/books/:id/bank/import        {format:"qfx"|"ofx"|"csv", content, bank?}   (Tangerine exports work)
 GET  /api/books/:id/bank/lines         POST /api/books/:id/bank/lines/:lid/post {account}
+POST /api/books/:id/parties | /works   POST /api/books/:id/royalties/{advance|receive|pay}
+GET  /api/books/:id/reports/royalty-statement?party_id=   GET /api/books/:id/reports/t2125?from&to
+GET  /api/books/:id/export/t2125.csv  POST /api/books/:id/close {date}
 GET  /api/books/:id/reports/{trial-balance|profit-loss|balance-sheet|sales-tax|aging}?from&to&as_of
 GET  /api/books/:id/export/beancount
 ```

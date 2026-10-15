@@ -10,5 +10,10 @@
   "d1_databases": [
     { "binding": "DB", "database_name": "noizybkz", "database_id": "<D1_DATABASE_ID>", "migrations_dir": "migrations" }
   ],
+  // Always on: nightly backup at 07:17 UTC (NOIZY.AI keeps no office hours).
+  //   npx wrangler r2 bucket create noizybkz-backups
+  "triggers": { "crons": ["17 7 * * *"] },
+  "r2_buckets": [{ "binding": "BACKUPS", "bucket_name": "noizybkz-backups" }],
+  // "vars": { "HALT_URL": "https://noizy-halt.<subdomain>.workers.dev" },
   "observability": { "enabled": true }
 }

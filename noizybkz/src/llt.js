@@ -30,7 +30,7 @@ const holderId = (h) => {
 export async function holderBalance(db, bookId, holder) {
   const r = await db.prepare("SELECT COALESCE(SUM(amount), 0) AS bal FROM postings WHERE book_id = ? AND account_code = '8100' AND party = ?")
     .bind(bookId, holder).first();
-  return -r.bal; // liability: credit balance = credits held
+  return 0 - r.bal; // liability: credit balance = credits held
 }
 
 // Fiat value of `credits` at the book's declared rate (fiscal policy only).

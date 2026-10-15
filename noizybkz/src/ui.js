@@ -39,7 +39,7 @@ table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}td,t
 <div class="card"><h2 style="margin-top:0">Open documents</h2><div class="wrap"><table id="docs"></table></div></div>
 <div class="card"><div class="tabs row" style="flex-wrap:wrap">
  <button data-r="profit-loss" class="on">Profit &amp; loss</button><button data-r="balance-sheet">Balance sheet</button>
- <button data-r="trial-balance">Trial balance</button><button data-r="sales-tax">Sales tax</button><button data-r="aging">Receivables aging</button>
+ <button data-r="trial-balance">Trial balance</button><button data-r="sales-tax">Sales tax</button><button data-r="aging">Receivables aging</button><button data-r="t2125">CRA T2125</button>
  <button id="export">Export (Beancount)</button></div>
  <div class="row"><div><label>From</label><input id="rfrom" type="date"></div><div><label>To / as of</label><input id="rto" type="date"></div></div>
  <div class="wrap"><table id="report"></table></div></div>
@@ -75,6 +75,7 @@ async function showReport(){const q=new URLSearchParams();if($("rfrom").value)q.
  if(report==="sales-tax"){const d=r.families.flatMap(f=>[...f.components.map(c=>[f.family+" · "+c.code,money(c.collected),money(c.itc),""]),[f.family+" net owing",,"",money(f.net)]]);
   if(r.gst34)d.push(["GST34 line 101 (sales)",money(r.gst34.line_101_sales_and_other_revenue),"",""],["GST34 line 103 / 106 / 109",money(r.gst34.line_103_gst_hst_collected),money(r.gst34.line_106_input_tax_credits),money(r.gst34.line_109_net_tax)]);
   rows("report",[["Tax"],["Collected",1],["Recoverable",1],["Net",1]],d)}
+ if(report==="t2125"){rows("report",[["Line"],["Description"],["Amount",1]],[...r.income.map(l=>[l.line,l.label,money(l.amount)]),["8299","Gross business income",money(r.line_8299_gross_business_income)],...r.expenses.map(l=>[l.line,l.label,money(l.amount)]),["9368","Total expenses",money(r.line_9368_total_expenses)],["9369","Net income before adjustments",money(r.line_9369_net_income_before_adjustments)],...r.notes.map(n=>["Note",n,""])]);return}
  if(report==="aging")rows("report",[["No."],["Customer"],["Due"],["Days overdue",1],["Owing",1]],[...r.items.map(i=>[i.number,i.party,i.due||i.date,String(i.days_overdue),money(i.owing)]),["Total","","","",money(r.total)]])}
 $("connect").onclick=()=>connect().catch(e=>say(e.message,1));$("book").onchange=()=>refresh().catch(e=>say(e.message,1));$("dkind").onchange=()=>refresh().catch(e=>say(e.message,1));
 $("bcreate").onclick=async()=>{try{const b=await api("/books",{method:"POST",body:JSON.stringify({name:$("bname").value,jurisdiction:$("bjur").value})});await connect();$("book").value=b.id;await refresh();say("Book created.")}catch(e){say(e.message,1)}};

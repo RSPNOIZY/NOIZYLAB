@@ -59,8 +59,12 @@ async function accountSet(db, bookId) {
 }
 
 // Validate and build the statements for one balanced transaction.
-async function txnStatements(db, bookId, { date, description, kind, ref = null, postings }) {
+export async function txnStatements(db, bookId, { date, description, kind, ref = null, postings }) {
   isoDate(date);
+  const { locked_through } = await getBook(db, bookId);
+  if (locked_through && date <= locked_through) {
+    throw new BkzError(409, `the books are closed through ${locked_through}; post on a later date or reverse in the open period`);
+  }
   if (!description) throw new BkzError(400, "description is required");
   if (!Array.isArray(postings) || postings.length < 2) throw new BkzError(400, "a transaction needs at least two postings");
   const accounts = await accountSet(db, bookId);
@@ -121,7 +125,7 @@ export async function listTxns(db, bookId, { from = "0000-01-01", to = "9999-12-
 
 // Tax per document: each component applies to the taxable subtotal once, which is how
 // invoices are normally computed. Lines with taxable:false are exempt/zero-rated.
-function computeDoc(book, lines, accounts, allowedTypes) {
+function computeDoc(book, lines, accounts, allowedTypes, supplyCode = book.jurisdiction) {
   if (!Array.isArray(lines) || lines.length === 0) throw new BkzError(400, "at least one line is required");
   const parsed = lines.map((l, i) => {
     const a = accounts.get(l.account);
@@ -133,7 +137,7 @@ function computeDoc(book, lines, accounts, allowedTypes) {
     return { account: l.account, description: l.description || "", amount, taxable: l.taxable !== false };
   });
   const taxableBase = parsed.filter((l) => l.taxable).reduce((s, l) => s + l.amount, 0);
-  const taxes = jurisdiction(book.jurisdiction).components
+  const taxes = jurisdiction(supplyCode).components
     .map((c) => ({ ...c, amount: applyRate(taxableBase, c.rate_ppm) }))
     .filter((t) => t.amount !== 0);
   const net = parsed.reduce((s, l) => s + l.amount, 0);
@@ -143,7 +147,12 @@ function computeDoc(book, lines, accounts, allowedTypes) {
 
 async function createDoc(db, bookId, kind, input) {
   const book = await getBook(db, bookId);
-  const { number, party, date, due = null, consent_ref = null } = input;
+  const { number, party, date, due = null, consent_ref = null, place_of_supply = null } = input;
+  const supply = place_of_supply || book.jurisdiction;
+  jurisdiction(supply);
+  if (supply.split("-")[0] !== book.jurisdiction.split("-")[0]) {
+    throw new BkzError(400, `place_of_supply ${supply} is outside this book's country; export sales are zero-rated — mark lines taxable:false`);
+  }
   if (!number || !party) throw new BkzError(400, "number and party are required");
   isoDate(date);
   if (due) isoDate(due, "due");
@@ -152,7 +161,7 @@ async function createDoc(db, bookId, kind, input) {
 
   const accounts = await accountSet(db, bookId);
   const isInvoice = kind === "invoice";
-  const doc = computeDoc(book, input.lines, accounts, isInvoice ? ["INCOME"] : ["EXPENSE", "ASSET"]);
+  const doc = computeDoc(book, input.lines, accounts, isInvoice ? ["INCOME"] : ["EXPENSE", "ASSET"], supply);
   const postings = [];
 
   if (isInvoice) {
@@ -177,7 +186,7 @@ async function createDoc(db, bookId, kind, input) {
     db.prepare("INSERT INTO docs (id, book_id, kind, number, party, date, due, total, paid, txn_id, consent_ref) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?)")
       .bind(docId, bookId, kind, String(number).slice(0, 50), String(party).slice(0, 200), date, due, doc.total, t.id, consent_ref ? String(consent_ref).slice(0, 100) : null),
   ]);
-  return { id: docId, kind, number, party, date, due, consent_ref, net: doc.net, taxes: doc.taxes.map(({ code, amount }) => ({ code, amount })), total: doc.total, paid: 0, txn_id: t.id };
+  return { id: docId, kind, number, party, date, due, consent_ref, place_of_supply: supply, net: doc.net, taxes: doc.taxes.map(({ code, amount }) => ({ code, amount })), total: doc.total, paid: 0, txn_id: t.id };
 }
 
 export const createInvoice = (db, bookId, input) => createDoc(db, bookId, "invoice", input);
@@ -245,4 +254,32 @@ export async function reverseTxn(db, bookId, txnId, { date, reason }) {
   });
   await db.batch(t.statements);
   return getTxn(db, bookId, t.id);
+}
+
+// Close a fiscal period: move every income and expense balance into retained
+// earnings (3900) and lock the books through `date`. Real-money accounts only;
+// LLT has its own ledger and is never closed into equity.
+export async function closePeriod(db, bookId, { date }) {
+  isoDate(date);
+  const book = await getBook(db, bookId);
+  if (book.locked_through && date <= book.locked_through) throw new BkzError(409, `already closed through ${book.locked_through}`);
+  const { results } = await db.prepare(`
+    SELECT a.code, COALESCE(SUM(p.amount), 0) AS bal FROM accounts a
+    JOIN postings p ON p.book_id = a.book_id AND p.account_code = a.code
+    JOIN txns t ON t.id = p.txn_id
+    WHERE a.book_id = ? AND a.unit IS NULL AND a.type IN ('INCOME','EXPENSE') AND t.date <= ?
+    GROUP BY a.code HAVING SUM(p.amount) != 0`).bind(bookId, date).all();
+  const statements = [];
+  let txn = null;
+  if (results.length) {
+    const postings = results.map((r) => ({ account: r.code, amount: -r.bal, memo: "Year-end close" }));
+    const net = results.reduce((s, r) => s + r.bal, 0);
+    if (net !== 0) postings.push({ account: "3900", amount: net, memo: net < 0 ? "Net income to retained earnings" : "Net loss to retained earnings" });
+    const t = await txnStatements(db, bookId, { date, description: `Close period through ${date}`, kind: "close", postings });
+    statements.push(...t.statements);
+    txn = t.id;
+  }
+  statements.push(db.prepare("UPDATE books SET locked_through = ? WHERE id = ?").bind(date, bookId));
+  await db.batch(statements);
+  return { locked_through: date, closing_txn: txn, accounts_closed: results.length };
 }

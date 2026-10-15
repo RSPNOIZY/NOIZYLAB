@@ -2,7 +2,7 @@
 // Sign convention in storage: debit +, credit −. Reports flip credit-normal sections
 // (liabilities, equity, income) so they read as positive numbers.
 
-import { jurisdiction } from "./jurisdictions.js";
+import { JURISDICTIONS, jurisdiction } from "./jurisdictions.js";
 
 const FAR_PAST = "0000-01-01";
 const FAR_FUTURE = "9999-12-31";
@@ -69,8 +69,16 @@ export async function salesTaxReturn(db, book, { from = FAR_PAST, to = FAR_FUTUR
     GROUP BY p.tag`).bind(book.id, from, to).all();
   const byTag = new Map(results.map((r) => [r.tag, r.total]));
   const j = jurisdiction(book.jurisdiction);
+  // Include every tax the book can charge under place-of-supply (same country),
+  // e.g. an Ontario book selling to a Quebec customer collects GST + QST.
+  const country = book.jurisdiction.split("-")[0];
+  const seen = new Set(j.components.map((c) => c.code));
+  const extra = Object.entries(JURISDICTIONS)
+    .filter(([code]) => code.split("-")[0] === country && code !== book.jurisdiction)
+    .flatMap(([, x]) => x.components)
+    .filter((c) => !seen.has(c.code) && (seen.add(c.code), byTag.has(`tax:${c.code}:collected`) || byTag.has(`tax:${c.code}:itc`)));
   const families = new Map();
-  for (const c of j.components) {
+  for (const c of [...j.components, ...extra]) {
     const collected = -(byTag.get(`tax:${c.code}:collected`) || 0);
     const itc = c.recoverable ? byTag.get(`tax:${c.code}:itc`) || 0 : 0;
     if (!families.has(c.family)) families.set(c.family, { family: c.family, components: [], collected: 0, itc: 0, net: 0 });
