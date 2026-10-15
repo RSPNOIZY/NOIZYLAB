@@ -1,0 +1,52 @@
+# CF watch: checks Cloudflare every day (SDK and tool versions, the changelog, status).
+# Read-only. Nothing is upgraded or deployed. News goes to one GitHub issue, "Cloudflare daily check".
+# Last-seen state lives on the bot branch cf-watch/state, never on main.
+name: cf-watch
+on:
+  schedule:
+    - cron: "41 11 * * *"   # every day, 11:41 UTC (07:41 Toronto in summer)
+  workflow_dispatch:
+permissions:
+  contents: write   # only to push the cf-watch/state branch
+  issues: write     # only to comment on the daily-check issue
+concurrency: { group: cf-watch, cancel-in-progress: false }
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "22" }
+      - name: HALT check (when HALT_URL is set; fails closed)
+        env: { HALT_URL: "${{ secrets.HALT_URL }}" }
+        run: if [ -n "$HALT_URL" ]; then bash scripts/halt/halt_check.sh; else echo "HALT_URL not set yet — read-only job, continuing"; fi
+      - name: Load last state
+        run: |
+          git fetch --depth=1 origin cf-watch/state 2>/dev/null \
+            && git show FETCH_HEAD:docs/cloudflare/cf-watch-state.json > docs/cloudflare/cf-watch-state.json \
+            || echo "No saved state yet (first run)"
+      - name: Check Cloudflare
+        id: watch
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          CF_WATCH_TOKEN: ${{ secrets.CF_WATCH_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+        run: node scripts/cf-watch/cf_watch.mjs
+      - name: Save state
+        run: |
+          git config user.name "noizy-cf-watch"
+          git config user.email "noizy-cf-watch@users.noreply.github.com"
+          git checkout -B cf-watch/state
+          git add -f docs/cloudflare/cf-watch-state.json docs/cloudflare/CF-WATCH-REPORT.md
+          git commit -m "CF watch $(date -u +%F)" || exit 0
+          git push -f origin cf-watch/state
+      - name: Post news to the daily-check issue
+        if: steps.watch.outputs.news != '0'
+        env: { GH_TOKEN: "${{ github.token }}" }
+        run: |
+          n=$(gh issue list --state open --search "Cloudflare daily check in:title" --json number -q '.[0].number')
+          if [ -z "$n" ]; then
+            gh issue create --title "Cloudflare daily check" --body "One comment per day when Cloudflare changes something we use. Read-only; nothing is applied automatically."
+            n=$(gh issue list --state open --search "Cloudflare daily check in:title" --json number -q '.[0].number')
+          fi
+          gh issue comment "$n" --body-file docs/cloudflare/CF-WATCH-REPORT.md

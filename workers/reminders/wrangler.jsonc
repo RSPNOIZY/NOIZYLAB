@@ -1,0 +1,13 @@
+{
+  // NOIZY Reminders bridge. Spec: docs/tasks/APPLE-REMINDERS-BRIDGE.md
+  // Secrets (values live in VAULT-OPS, never in git):
+  //   npx wrangler secret put AGENT_KEY   # agents and RSP_001 add tasks
+  //   npx wrangler secret put PHONE_KEY   # the iPhone Shortcut only
+  // KV: npx wrangler kv namespace create TASKS_KV  → paste the id below.
+  "name": "noizy-reminders",
+  "main": "src/index.js",
+  "compatibility_date": "2026-10-01",
+  "kv_namespaces": [{ "binding": "TASKS_KV", "id": "<TASKS_KV_NAMESPACE_ID>" }],
+  // "vars": { "HALT_URL": "https://noizy-halt.<subdomain>.workers.dev" },
+  "observability": { "enabled": true }
+}

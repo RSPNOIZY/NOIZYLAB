@@ -158,7 +158,10 @@ The code is in `workers/halt/`, and the check that jobs run before starting is `
 | LUCY | Archives, receipts, mobile view | Read-only: KV, D1 reads | Read-only | none | VAULT-OPS/agents/lucy |
 | SHIRL | Consent guardian | HALT halt-key only; ledger read | none | Write access to `10-CONSENT/` only (see §4) | VAULT-OPS/agents/shirl |
 | CB01 | DNS and domain operations | DNS edit on listed domains only | `noizy-identity` repo | none | VAULT-OPS/agents/cb01 |
-| n8n (GOD) | Mail and comms automation | none | none | Bridge local IMAP/SMTP for rsp@ only | VAULT-OPS/agents/n8n |
+| Gmail send-as | Lets the brand Gmail send as each support alias through Cloudflare SMTP | **Email Sending: Edit** only | none | none | VAULT-OPS/mail/gmail-send-as |
+| cloudflared (GOD) | Connects the M2 Ultra to Cloudflare as a cloud node (`docs/infra/M2ULTRA-CLOUD-NODE.md`) | Tunnel token for the `god` tunnel only | none | none | VAULT-OPS/infra/god-tunnel |
+| Reminders bridge | Agents add tasks to Apple Reminders via the iPhone (`docs/tasks/APPLE-REMINDERS-BRIDGE.md`) | none (Worker secrets `AGENT_KEY`, `PHONE_KEY`) | none | none | VAULT-OPS/tasks/agent-key · VAULT-OPS/tasks/phone-key |
+| CF watch | Daily read-only Cloudflare check (`docs/cloudflare/`) | Read-only: Account Settings, Workers Scripts, D1, R2, Zone (all **Read**) | GitHub Actions' own token | none | VAULT-OPS/agents/cf-watch |
 
 **Rules:**
 

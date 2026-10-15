@@ -112,8 +112,17 @@ Your full account list (the addresses themselves) belongs in the **private** `no
 - **Set it up:**
   1. Turn on **2-step verification** in that Google account.
   2. In Spark: **Add Account → Google** → sign in. No password goes into Spark.
-  3. Add each brand address as an **alias** in Gmail first (Gmail → Settings → Accounts → "Send mail as"), then in Spark. Now you can reply as `hello@noizyfish.com` and so on.
-  4. **Spark +AI:** fine for this account, because it holds public brand mail only.
+  3. **Send as every support alias** (the `send_as: true` rows in `aliases.yaml`):
+     - Gmail on the web → Settings → **Accounts and Import** → "Send mail as" → **Add another email address**.
+     - Name: the brand (for example "NOIZYFISH Support"). Address: `support@noizyfish.com`. **Untick "Treat as an alias"** only if you want replies kept separate; leave it ticked otherwise.
+     - SMTP server: `smtp.mx.cloudflare.net` · Port: **465** · **SSL**.
+     - Username: `api_token` · Password: the Cloudflare token from Proton Pass → VAULT-OPS → `mail/gmail-send-as` (Email Sending: Edit only).
+     - Gmail emails a code to the alias. The hub forwards it to this Gmail. Enter the code.
+     - Repeat for each alias. **Never** add `support@`, `consent@` or `hello@noizyvox.com` (they're `ai: never`).
+  4. Gmail → Settings → Accounts → "When replying to a message": **Reply from the same address the message was sent to.**
+  5. **In Spark:** Settings → Accounts → the brand Gmail → **Aliases** → add each address you added in Gmail. Spark only shows aliases the provider already has.
+  6. **Spark +AI:** fine for this account, because it holds public brand and support mail only. A person always presses Send.
+  7. **Test:** send a message from your iCloud to `support@noizyfish.com`. It should arrive in Spark. Reply. The reply should come **from** `support@noizyfish.com`, and the headers should show `dkim=pass` and `dmarc=pass` for noizyfish.com.
 - **Gmail filters (labels):** one label per brand (NOIZYFISH, NOIZYLAB, NOIZYWORLD, FISHMUSICINC), matching the "To" address.
 
 ---
@@ -144,12 +153,12 @@ Your full account list (the addresses themselves) belongs in the **private** `no
 - **Signatures:** one per account.
   - **iCloud:** your name.
   - **`rsp@noizy.ai`:** "Robert Stephen Plowman · NOIZY.AI".
-- **Default "From":** set to `rsp@noizy.ai` for work replies.
+- **Default "From":** for new work mail, the brand Gmail with `hello@noizyworld.com` (or `rsp@noizy.ai` once D7 is decided). Replies use the address the mail was sent to.
 - **Send Later and Undo Send:** turn Undo Send on, with the longest delay.
 - **Aliases ("send from" another address):** Spark supports them for **Gmail, iCloud, Outlook, Microsoft 365 and Yahoo** accounts only.
   - **Create the alias with the provider first,** then add it in Spark under that account's alias settings.
   - **Desktop default sender:** Settings → Composer. The default applies to new emails only, not replies.
-  - **The Bridge account (`rsp@noizy.ai`) can't use Spark aliases.** That's fine: brand replies come from `rsp@noizy.ai` anyway (the reply rule in `MAIL-HUB-SPEC.md`).
+  - **All support aliases live on the brand Gmail account** (Step 3). Gmail sends them through Cloudflare's SMTP server, so DMARC passes (the reply rule in `MAIL-HUB-SPEC.md`).
 
 ### Security
 
@@ -165,7 +174,7 @@ Your full account list (the addresses themselves) belongs in the **private** `no
 ## Done when
 
 - [ ] iCloud receives and sends in Spark on iPhone, iPad and Mac.
-- [ ] `rsp@noizy.ai` receives and sends in Spark on the Mac, with Bridge starting at login.
+- [ ] The brand Gmail receives every support alias, and replies go out **as** that alias with `dmarc=pass`.
 - [ ] Spark +AI is set the way you want on **every** device.
 - [ ] AI Assistant indexing is off, unless you chose to turn it on.
 - [ ] Both new passwords are saved in Proton Pass.

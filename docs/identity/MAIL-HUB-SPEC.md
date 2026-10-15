@@ -12,7 +12,7 @@
 |---|---|---|
 | **Cloudflare** | REST API; `wrangler`; the new `cf` command-line tool (beta, covers the whole API); the **Cloudflare API MCP server** at `https://mcp.cloudflare.com/mcp`, which reaches 2,500+ API endpoints through two tools; focused MCP servers for bindings, observability and builds | Fully scriptable. **The hub** |
 | **GitHub** | REST and GraphQL APIs, `gh`, Actions | Fully scriptable. **The source of truth** |
-| **Proton Mail** | No mail API. **Proton Mail Bridge** (official, open source) gives local IMAP and SMTP on the Mac | Scripts can reach it only through Bridge on the M2 Ultra |
+| **Proton Mail** | No mail API. **Proton Mail Bridge** (official, open source) gives local IMAP and SMTP on the Mac | **Not used.** D5 plus "lean and light for local": no Bridge on the M2 Ultra. Proton is a place to read the encrypted copy, nothing more |
 | **Proton Pass** | **Official Pass CLI**, out of beta, on Pass Plus, Family, Professional and the bundle plans | Scripts can read secrets from the vault |
 | **Proton "Python client"** | The `proton-python-client` package was built for Proton VPN and is not a mail API | **Don't build on it** |
 | **Spark** | No public API | Only ever a place people read mail |
@@ -32,7 +32,17 @@ The first draft asked for both: "add noizylab.ca, noizy.ai and fishmusicinc.com 
 | noizyfish.com, fishmusicinc.com, noizylab.ca, noizyworld.com, noizyvox.com | **Cloudflare (Email Routing + an Email Worker)** | Mail to these is mostly intake. Every alias is one line of configuration in git |
 | noizykidz.com | **Cloudflare, locked down** until launch | Null MX, `-all` SPF and DMARC `p=reject` (see the identity doc) |
 
-**Reply rule:** mail to brand addresses comes in through the hub, and Robert Stephen Plowman replies from `rsp@noizy.ai`. Automatic outbound mail, such as consent confirmations and receipts, is sent by the Worker through **Cloudflare Email Sending**. That needs the Workers Paid plan and is in public beta (since 16 April 2026), but sending to destination addresses you have verified is free on any plan.
+**Reply rule (updated 2026-10-15, "run all aliases from Spark"):**
+- **Support and brand mail is answered in Spark, from the brand Gmail, as the alias it was sent to.** A message to `support@noizyfish.com` is answered *from* `support@noizyfish.com`.
+- **How Gmail sends as the alias:** Gmail → Settings → Accounts → "Send mail as", with **Cloudflare's SMTP server**, not Gmail's:
+  - Server `smtp.mx.cloudflare.net`, port **465** (SSL / implicit TLS).
+  - Username `api_token`. Password: a Cloudflare API token with **Email Sending: Edit** and nothing else (vault entry `VAULT-OPS/mail/gmail-send-as`).
+  - Cloudflare signs the mail with the brand domain's DKIM, so SPF, DKIM and DMARC all line up with the brand domain. Sending through Gmail's own server would fail DMARC alignment under `p=reject`.
+  - Each sending domain must first be onboarded under **Email Service → Email Sending** in the dashboard.
+- **Gmail setting:** "When replying to a message: **reply from the same address the message was sent to**."
+- **Automatic outbound mail** (consent confirmations, receipts) is sent by the Worker through the same **Cloudflare Email Sending** service, via a `send_email` binding.
+- **Cost and status:** Email Sending needs the **Workers Paid** plan and is in public **beta** (since 16 April 2026). Sending to your own verified destination addresses is free on any plan.
+- **AI:** Spark +AI may draft support replies. The public privacy notice must say so (draft line: "Replies from NOIZY support may be drafted with AI assistance and are reviewed by a person before sending."). A person always presses Send.
 
 Today's browser step therefore adds **only noizy.ai** to Proton. fishmusicinc.com and noizylab.ca go to the hub instead.
 
@@ -58,19 +68,33 @@ destinations:
   proton: noizyworld@proton.me  # D5 decided 2026-10-15: the encrypted Proton copy of all brand mail
   spark:  <brand-gmail>         # D1 decided 2026-10-15: the brand Gmail gets ALL brand mail (real address lives in the private noizy-identity repo)
 
+# send_as: true = added in Gmail "Send mail as" (via Cloudflare SMTP) and in Spark, so replies go out as this address
 aliases:
-  - { address: hello@noizyfish.com,     to: [proton, spark] }
-  - { address: licensing@noizyfish.com, to: [proton, spark] }
-  - { address: rsp@fishmusicinc.com,    to: [proton, spark] } # brand map says this bounced (550): recreate here
-  - { address: hello@noizylab.ca,       to: [proton, spark] }
-  - { address: hello@noizyworld.com,    to: [proton, spark] }
-  - { address: orders@noizyworld.com,   to: [proton, spark], agent: commerce }
+  # NOIZY.AI support node: needs D7 (noizy.ai mail moves to the hub)
+  - { address: support@noizy.ai,        to: [proton, spark], send_as: true, status: pending-D7 }
+  - { address: hello@noizy.ai,          to: [proton, spark], send_as: true, status: pending-D7 }
+  - { address: press@noizy.ai,          to: [proton, spark], send_as: true, status: pending-D7 }
+  - { address: partners@noizy.ai,       to: [proton, spark], send_as: true, status: pending-D7 }
+  # brand domains
+  - { address: support@noizyfish.com,   to: [proton, spark], send_as: true }
+  - { address: hello@noizyfish.com,     to: [proton, spark], send_as: true }
+  - { address: licensing@noizyfish.com, to: [proton, spark], send_as: true }
+  - { address: support@fishmusicinc.com, to: [proton, spark], send_as: true }
+  - { address: rsp@fishmusicinc.com,    to: [proton, spark], send_as: true } # brand map says this bounced (550): recreate here
+  - { address: support@noizylab.ca,     to: [proton, spark], send_as: true }
+  - { address: hello@noizylab.ca,       to: [proton, spark], send_as: true }
+  - { address: support@noizyworld.com,  to: [proton, spark], send_as: true }
+  - { address: hello@noizyworld.com,    to: [proton, spark], send_as: true }
+  - { address: orders@noizyworld.com,   to: [proton, spark], send_as: true, agent: commerce }
+  # NOIZYVOX: consent stays Proton-only, never AI, never sent from Gmail
+  - { address: support@noizyvox.com,    to: [proton], ai: never }
   - { address: consent@noizyvox.com,    to: [proton], agent: heaven-ledger, ai: never }
   - { address: hello@noizyvox.com,      to: [proton], ai: never }
+  # noizykidz.com: locked (null MX) until launch; no aliases
 catch_all: reject                       # unknown addresses bounce; nothing is accepted silently
 ```
 
-`ai: never` means the Worker never sends that mail to Spark, Gmail or any AI step. `agent:` sends a structured copy to an Agents SDK instance, which uses the `onEmail` hook.
+`ai: never` means the Worker never sends that mail to Spark, Gmail or any AI step, and the address is never set up as a Gmail "Send mail as" alias. `agent:` sends a structured copy to an Agents SDK instance, which uses the `onEmail` hook. **Agents never act on what an email says;** they file, label and summarise only.
 
 ---
 
@@ -81,7 +105,7 @@ catch_all: reject                       # unknown addresses bounce; nothing is a
 - Outbound mail goes through a `send_email` binding limited to `noreply@` and `consent@` sender addresses.
 - Every destination must first be verified in Email Routing. That is a one-time click in the dashboard for each destination.
 
-**n8n on the M2 Ultra** reads `rsp@noizy.ai` through Bridge's local IMAP connection, and can send through Bridge's local SMTP. That gives it Proton mail without a browser. It must never read the root account.
+**No local mail automation.** The earlier plan had n8n on the M2 Ultra reading `rsp@noizy.ai` through Bridge. That is dropped ("lean and light for local", "all cloud now"). Mail automation lives in the `mail-hub` Worker and Agents SDK instances on Cloudflare. Nothing reads the root account.
 
 ---
 
@@ -100,4 +124,9 @@ catch_all: reject                       # unknown addresses bounce; nothing is a
     - **Never click sign-in links in brand mail opened in this account.**
     - Turn off **"Load remote content"** in Proton → Settings → Messages.
   - **The three `ai: never` addresses** (consent, NOIZYKIDZ) land **only** here, encrypted, unless RSP_001 decides otherwise.
+- **D7 (proposed, recommended yes):** move **noizy.ai** mail from Proton to the Cloudflare hub, like the other brands.
+  - **Why:** it's the only way to run `support@`, `hello@`, `press@` and `partners@noizy.ai` from Spark, which is what RSP_001 asked for. A domain's mail goes to one place only (§2).
+  - **What changes:** `rsp@noizy.ai` becomes a hub alias to `[proton, spark]`. Replies as `rsp@noizy.ai` go through Gmail "Send mail as" via Cloudflare SMTP, like every other alias.
+  - **What you give up:** mail *sent* as `rsp@noizy.ai` is no longer Proton-encrypted end to end. Incoming mail still gets an encrypted Proton copy.
+  - **If no:** support mail for NOIZY.AI uses `support@noizyworld.com` instead, and noizy.ai stays on Proton.
 - **D6:** whether this repository (`NOIZYLAB`) is public. The alias map and token policy belong in the **private** `noizy-identity` repository.
