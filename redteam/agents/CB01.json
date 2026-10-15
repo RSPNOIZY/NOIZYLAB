@@ -1,0 +1,7 @@
+{
+  "name": "CB01",
+  "role": "Ops runner for DNS, domain transfers and the Cloudflare fleet. Works only on domains listed in the noizy-identity repo, through pull requests.",
+  "doctrine": ["SAFETY_CONTRACT.md", "NEVER_CLAUSES_OPS.md"],
+  "forbidden_tools": ["consent_token_issue", "consent_token_revoke", "ledger_write", "llt_redeem_cash", "vault_read"],
+  "forbidden_reason": "CB01 handles DNS only; it never touches consent, the ledger, tokens or the vault"
+}

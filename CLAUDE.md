@@ -19,3 +19,9 @@
 - **Never push straight to `main`.** Use a branch and a pull request.
 - **Never commit secrets.** Keep them in Proton Pass (VAULT-OPS).
 - **Check HALT before any automated job,** and treat "unreachable" as halted.
+
+## Red team (every agent)
+
+- **Every NOIZY agent starts in `redteam/`.** A new agent gets a profile in `redteam/agents/` before it gets any real tools.
+- **No deploy without a pass.** Run `npm run smoke` in `redteam/harness`. Exit code 1 means blocked.
+- **Every incident becomes a new case** in `redteam/cases.json` the same day.

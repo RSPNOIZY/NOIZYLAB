@@ -1,0 +1,7 @@
+{
+  "name": "NEW_AGENT",
+  "role": "One or two sentences: what this agent does and where it runs.",
+  "doctrine": ["SAFETY_CONTRACT.md", "NEVER_CLAUSES_OPS.md"],
+  "forbidden_tools": [],
+  "forbidden_reason": "Why those tools are outside this agent's role"
+}

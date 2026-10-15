@@ -87,9 +87,13 @@
 4. Re-run the full catalogue.
 5. RSP_001 approves by voice.
 
-## 8. What to build next
+## 8. The harness (built)
 
-- [ ] **A harness Worker** that reads `cases.json`, plays each attack against a staging GABRIEL, records the tool calls and scores the results automatically.
-- [ ] **Canary seeding** in the staging vault and memory.
-- [ ] **Outbound stubs** for email, Discord, Slack and deploys.
-- [ ] **Results charted** on the NOIZYBKZ-style dashboard, using the same palette, so trends are easy to see.
+- **The harness is built.** See `redteam/README.md`.
+  - [x] It plays every attack, records tool calls into a fake world, and scores the results.
+  - [x] It plants fake secrets (canaries), and stubs every outbound action.
+  - [x] Agent profiles: every agent in `redteam/agents/` gets the 20 shared attacks automatically.
+  - [x] A GitHub check runs the free self-test on every pull request.
+- **Still to build:**
+  - [ ] Red-team mode in the GABRIEL daemon, so `--target http` tests the live agent.
+  - [ ] A results chart on the NOIZYBKZ-style dashboard.
