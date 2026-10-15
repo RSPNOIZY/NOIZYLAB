@@ -9,8 +9,9 @@
 ## The order
 
 1. **iCloud first.** Your personal mail. Works on iPhone, iPad and Mac.
-2. **`rsp@noizy.ai`** through Proton Mail Bridge. **Mac only.** Do this after noizy.ai is set up in Proton.
-3. **Optional: a Gmail inbox** for public `hello@` brand mail, so you can triage it on the phone too (decision D1 in `MAIL-HUB-SPEC.md`).
+2. **The brand Gmail** (Step 3): **all brand mail**, on every device (D1).
+3. **Your other accounts** (Step 1d).
+4. **Proton:** brand mail is also copied to `noizyworld@proton.me` (D5). Read that copy in the **Proton app**, not in Spark. **Step 2 (Bridge) is no longer needed.**
 
 **Never in Spark:**
 - `noizyworld@proton.me`: the account that owns everything.
@@ -72,7 +73,9 @@ Your full account list (the addresses themselves) belongs in the **private** `no
 - **Recovery:** each agent's Apple ID uses **your** recovery details, plus two-factor authentication on a device you hold. An agent must never be able to recover its own account.
 - **In Spark:** put the agent accounts in their own **Team** or folder, with notifications off, so they never mix with people's mail.
 
-## Step 2: `rsp@noizy.ai` through Proton Mail Bridge (Mac only)
+## Step 2 (not needed now): Proton through Bridge (Mac only)
+
+> **Skip this step.** Under decision D5, Proton mail lands in `noizyworld@proton.me`, which never goes into Spark. This section is kept only in case a non-root Proton mailbox is ever added to Spark.
 
 **Spark's own help page says Proton accounts work only in Spark Desktop (Mac and Windows), not on iPhone or iPad.** On your phone, use the Proton Mail app for this address.
 

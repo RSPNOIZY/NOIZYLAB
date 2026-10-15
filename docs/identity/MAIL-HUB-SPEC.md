@@ -55,7 +55,7 @@ noizy-identity/            (PRIVATE; holds the alias map and policy, never secre
 ```yaml
 # destination keys resolve to verified Email Routing destinations
 destinations:
-  proton: rsp@noizy.ai          # Proton working inbox (E2EE)
+  proton: noizyworld@proton.me  # D5 decided 2026-10-15: the encrypted Proton copy of all brand mail
   spark:  <brand-gmail>         # D1 decided 2026-10-15: the brand Gmail gets ALL brand mail (real address lives in the private noizy-identity repo)
 
 aliases:
@@ -92,5 +92,12 @@ catch_all: reject                       # unknown addresses bounce; nothing is a
     - They hold consent records, and children's and families' mail.
     - Google would store them, and Spark AI could read them.
   - **To include them anyway:** change `to:` to `[proton, spark]` and remove `ai: never`.
-- **D5:** routing everything to `noizyworld@proton.me` conflicts with "the root account never handles daily mail." **Recommended:** route to `rsp@noizy.ai`, and keep noizyworld as the account that owns everything.
+- **D5 (decided 2026-10-15):** the Proton destination is **`noizyworld@proton.me`**.
+  - **How it works:** daily reading happens in the **brand Gmail in Spark** (D1). noizyworld holds the **encrypted Proton copy**, and you read it in the **Proton app only**. It **never goes into Spark**, so Bridge isn't needed.
+  - **The trade-off:** the account that owns everything now receives outside mail, so phishing can reach it. To protect it:
+    - Hardware keys stay on.
+    - A Proton filter files all hub-forwarded mail under a **"Brand mail"** label, away from Proton's own messages.
+    - **Never click sign-in links in brand mail opened in this account.**
+    - Turn off **"Load remote content"** in Proton → Settings → Messages.
+  - **The three `ai: never` addresses** (consent, NOIZYKIDZ) land **only** here, encrypted, unless RSP_001 decides otherwise.
 - **D6:** whether this repository (`NOIZYLAB`) is public. The alias map and token policy belong in the **private** `noizy-identity` repository.
