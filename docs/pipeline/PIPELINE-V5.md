@@ -5,7 +5,7 @@
 
 | # | Job | Who does it | Gate | Done when |
 |---|---|---|---|---|
-| 0 | **NOIZYWORLD-ROOT** | Robert Stephen Plowman in the browser (Proton has no API) | none | noizyworld@proton.me is confirmed as org owner; hardware keys added; recovery kit printed and kept offline; **noizy.ai** added as a custom domain (only noizy.ai; see `MAIL-HUB-SPEC.md` §2) |
+| 0 | **NOIZYWORLD-ROOT** | Robert Stephen Plowman in the browser (Proton has no API) | none | noizyworld@proton.me is confirmed as org owner; hardware keys added; recovery kit printed and kept offline; **Cloudflare and registrar logins moved to noizyworld@proton.me** (before the noizy.ai mail switch; D7 in `MAIL-HUB-SPEC.md` §5). No custom domains in Proton |
 | 1 | **CF00**: one Cloudflare account | Robert Stephen Plowman logs in; Claude Code then checks | Job 0 | Every MCP connector, `wrangler` and the `cf` tool point at the **NOIZYFISH account** (`5f36aa97…`, per `HEAVEN.md`), which holds HEAVEN. *Checked 2026-10-15: the Cloudflare connector in this session lists **0 Workers**, so it is pointed at the empty account* |
 | 1b | **HALT00**: kill switch | Claude Code | Job 1 | `workers/halt` is deployed; `HALT_KEY` and `RESUME_KEY` are set from VAULT-OPS; every agent and n8n job runs `scripts/halt/halt_check.sh` first; one halt-and-resume drill has been done. **No agent job (Jobs 2–4) runs before this is done** |
 | 1c | **RT00**: red-team gate | Claude Code | Job 1b | `redteam/harness`: `npm test` and `npm run selftest` pass; `npm run smoke` passes for every agent profile. **Re-run before every deploy in Jobs 2–4; any FAIL or CRITICAL blocks it** |

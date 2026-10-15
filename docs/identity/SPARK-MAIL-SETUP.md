@@ -153,7 +153,7 @@ Your full account list (the addresses themselves) belongs in the **private** `no
 - **Signatures:** one per account.
   - **iCloud:** your name.
   - **`rsp@noizy.ai`:** "Robert Stephen Plowman · NOIZY.AI".
-- **Default "From":** for new work mail, the brand Gmail with `hello@noizyworld.com` (or `rsp@noizy.ai` once D7 is decided). Replies use the address the mail was sent to.
+- **Default "From":** for new work mail, the brand Gmail sending as `rsp@noizy.ai` (D7). Replies use the address the mail was sent to.
 - **Send Later and Undo Send:** turn Undo Send on, with the longest delay.
 - **Aliases ("send from" another address):** Spark supports them for **Gmail, iCloud, Outlook, Microsoft 365 and Yahoo** accounts only.
   - **Create the alias with the provider first,** then add it in Spark under that account's alias settings.

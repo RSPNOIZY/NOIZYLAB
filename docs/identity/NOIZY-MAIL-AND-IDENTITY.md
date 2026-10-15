@@ -79,7 +79,7 @@ The working rule is that a person reads two inboxes, and everything else is an a
 
 ## Ring 3: Brand aliases
 
-> **Replaced by `MAIL-HUB-SPEC.md`:** only noizy.ai moves to Proton. The other brand domains go through the Cloudflare hub, and the alias map lives in git.
+> **Replaced by `MAIL-HUB-SPEC.md`:** every domain, **including noizy.ai (D7, 2026-10-15)**, goes through the Cloudflare hub, and the alias map lives in git. Proton holds the encrypted copy only. `rsp@noizy.ai` is read in Spark through the brand Gmail; `ops@noizy.ai` still goes to Proton only. The Cloudflare and registrar logins move to `noizyworld@proton.me` first.
 
 Each of these is an extra address on the `rsp@` user in Proton. It needs no inbox of its own, and you can reply from it.
 
@@ -183,7 +183,7 @@ _dmarc  v=DMARC1; p=reject
 | 1 | Lock down root: hardware keys, recovery phrase offline, confirm org owner role and plan limits | All four checks in Ring 0 pass |
 | 2 | Create the vaults; move every secret currently in notes, files or email into them | A search of notes and files for "token", "password" and "api key" finds only pointers to the vault |
 | 3 | Create `ops@noizy.ai`; change the login email for GitHub, Cloudflare, registrars and GCP to it, one service at a time | Each service sends its confirmation to ops@ |
-| 4 | Add domains to Proton one at a time, **noizy.ai first**, following the DNS order above | A test message to every alias arrives; DMARC reports are clean |
+| 4 | ~~Add domains to Proton~~ **Replaced by D7:** move noizy.ai to the Cloudflare hub using the cut-over steps in `MAIL-HUB-SPEC.md` §5 | A test message to every alias arrives; DMARC reports are clean |
 | 5 | Lock down the domains that send no mail | Null MX, `-all` and `p=reject` are all published |
 | 6 | Set up Bridge and Spark on the Mac for rsp@, with AI excluded for noizyvox and noizykidz mail | A test brand email shows up in Spark; a test consent@ email gets no AI summary |
 | 7 | Tighten DMARC to quarantine, then reject | Two weeks of clean reports for each step |
