@@ -1,0 +1,15 @@
+{
+  "name": "noizybkz",
+  "version": "0.1.0",
+  "description": "NOIZYBKZ — free, open-source, cloud small-business books (Canada first, global by jurisdiction pack) on Cloudflare Workers + D1",
+  "license": "AGPL-3.0-or-later",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test --no-warnings test/*.test.mjs",
+    "dev": "wrangler dev",
+    "db:migrate": "wrangler d1 migrations apply noizybkz --remote",
+    "deploy": "wrangler deploy"
+  },
+  "engines": { "node": ">=22.13" }
+}

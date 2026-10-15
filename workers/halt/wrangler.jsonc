@@ -1,0 +1,12 @@
+{
+  // Deploy into the NOIZYFISH account (CF00) once confirmed.
+  // Secrets (values live in VAULT-OPS, never in git):
+  //   npx wrangler secret put HALT_KEY     # RSP_001, trusted human, SHIRL
+  //   npx wrangler secret put RESUME_KEY   # RSP_001 only — different value
+  // KV: npx wrangler kv namespace create HALT_KV  → paste the id below.
+  "name": "noizy-halt",
+  "main": "src/index.js",
+  "compatibility_date": "2026-10-01",
+  "kv_namespaces": [{ "binding": "HALT_KV", "id": "<HALT_KV_NAMESPACE_ID>" }],
+  "observability": { "enabled": true }
+}

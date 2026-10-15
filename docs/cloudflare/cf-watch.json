@@ -1,0 +1,19 @@
+{
+  "_about": "What the daily CF watch checks. Add a line to watch something new. Read by scripts/cf-watch/cf_watch.mjs.",
+  "npm": [
+    "cloudflare", "cf", "wrangler", "create-cloudflare", "workerd", "miniflare",
+    "@cloudflare/workers-types", "@cloudflare/vite-plugin", "@cloudflare/vitest-plugin",
+    "agents", "@cloudflare/ai-chat", "@cloudflare/think", "@cloudflare/sandbox",
+    "@cloudflare/puppeteer", "@cloudflare/playwright", "@cloudflare/containers",
+    "@cloudflare/flagship", "@cloudflare/workers-oauth-provider", "workers-ai-provider",
+    "@cloudflare/kv-asset-handler", "@cloudflare/realtimekit"
+  ],
+  "pypi": ["cloudflare", "cloudflare-flagship"],
+  "go": ["github.com/cloudflare/cloudflare-go/v7"],
+  "terraform": ["cloudflare/cloudflare"],
+  "github_releases": ["cloudflare/cloudflared", "cloudflare/mcp-server-cloudflare", "cloudflare/workers-sdk"],
+  "feeds": {
+    "changelog": "https://developers.cloudflare.com/changelog/rss/index.xml"
+  },
+  "status": "https://www.cloudflarestatus.com/api/v2/summary.json"
+}
