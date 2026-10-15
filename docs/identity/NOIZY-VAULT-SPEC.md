@@ -23,7 +23,19 @@ NOIZY VAULT/
 
 **Secrets never go in Drive.** Passwords, tokens and recovery phrases belong in Proton Pass, and the root recovery phrase stays offline. That keeps them out of anything Lumo reads.
 
-**Drive CLI:** Proton's official Drive command-line tool (v0.6.0, 20 July 2026, for macOS, Linux and Windows) can upload, download, list and share files. On the M2 Ultra (GOD), Prune00 uses it to push reports into `50-LICENSES/` with no browser involved. Proton says its Drive SDK isn't yet supported for third-party products, so use the official CLI rather than building on the SDK.
+**Drive CLI (built):** `scripts/vault/vault_push.sh` uses Proton's **official** Drive CLI (v0.6.0): `proton-drive auth login` once, then `proton-drive filesystem upload`.
+- **Preview by default.** It uploads only when you add `--go`.
+- **Allowed folders only:** 10-CONSENT, 20-AGREEMENTS, 30-LEGAL, 50-LICENSES, 90-INBOX.
+- **Refuses any file that looks like a secret.**
+- **Checks HALT** whenever `HALT_URL` is set.
+- **Legal-hold folders:** it never overwrites (`--conflict-strategy skip`) and prints SHA-256 fingerprints for the HEAVEN ledger.
+- **Why not the Drive SDK:** Proton says its SDK isn't supported for outside products yet, so we use the CLI.
+
+```bash
+proton-drive auth login                                   # once, in the browser
+scripts/vault/vault_push.sh ~/prune00_2026xxxx 50-LICENSES      # preview
+scripts/vault/vault_push.sh ~/prune00_2026xxxx 50-LICENSES --go # upload
+```
 
 ---
 
@@ -36,7 +48,16 @@ Checked October 2026:
 - **Lumo API:** on Proton's roadmap, with no date.
 - **Unconfirmed:** a Lumo connection to Proton Mail or Calendar. I couldn't find any official source for it. Check in the Lumo app. If it doesn't exist, Inbox Triage works only on mail that is pasted or attached into it.
 
-**Who uses them:** until the API ships, only a person can use a Custom Lumo. That person is Robert Stephen Plowman, or later a trusted human. SHIRL and the other agents **can't** query Lumo yet. Once the API ships, revisit whether SHIRL gets read-only access to Vaultkeeper.
+**Who uses them:** until the API ships, only a person can use a Custom Lumo. That person is Robert Stephen Plowman, or later a trusted human. SHIRL and the other agents **can't** query Lumo yet.
+
+**Lumo slot (built, switched off):** `redteam/harness/src/lumo.js`.
+- **The three Custom Lumos are already red-team agents:** `redteam/agents/VAULTKEEPER.json`, `INBOX_TRIAGE.json` and `LICENSE_CLERK.json`.
+  - Today their instructions are **rehearsed on Claude**, so weak wording gets caught now.
+  - On the day Proton releases the Lumo API:
+    1. Implement `complete()` from Proton's official docs.
+    2. Set `LUMO_API_URL` and `LUMO_API_KEY`.
+    3. Run `--target lumo`.
+- **No Custom Lumo touches real mail or vault files** until it passes the red team.
 
 Claude remains the main reasoning engine. Lumo is used only where the material must not leave Proton.
 

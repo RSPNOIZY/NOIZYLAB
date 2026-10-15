@@ -54,7 +54,7 @@ Further protections:
 | **California AB 1836** | In force | A dead performer's replica needs the **estate's consent** | Medium (secondary) |
 | **US NO FAKES Act (S. 4591 / H.R. 8915)** | **Bill, not law.** The Senate Judiciary Committee approved it June 2026; a floor attempt was blocked in September 2026 (per one source) | Would create a federal right over voice and likeness replicas | Medium; check congress.gov |
 | **Canada: common law** | Case law | The tort of **appropriation of personality** (recognised in Ontario) | Low-medium; ask a lawyer |
-| **Quebec Civil Code, art. 36** | In force | Lists using a person's **name, image, likeness or voice** for purposes other than legitimately informing the public as an invasion of privacy | Medium; check the article text |
+| **Quebec Civil Code, art. 36(5)** | In force | **Confirmed:** using a person's **name, image, likeness or voice** for any purpose other than legitimately informing the public is an invasion of privacy. *Aubry* (Supreme Court of Canada) applies it whenever the person is **recognisable**. No case law on synthetic voice clones yet | Medium-high; ask counsel how it applies to cloning |
 
 ---
 
@@ -89,7 +89,8 @@ NOIZYVOX consent should meet or **exceed** the strictest terms above. Every cons
 - [ ] Read the final **ACTRA IPA 2025–2027** (the branch summaries may reflect the tentative deal).
 - [ ] Read UBCP's **BCMPA AI terms**.
 - [ ] Find the **SAG-AFTRA Interactive Media Agreement 2025** minimum replica rates.
-- [ ] Ask Canadian counsel about appropriation of personality and Quebec Civil Code art. 36 as they apply to voice cloning.
+- [x] Quebec Civil Code art. 36(5) wording confirmed (name, image, likeness or **voice**).
+- [ ] Ask Canadian counsel how art. 36(5) and appropriation of personality apply to **synthetic** voice clones (no case law found).
 - [ ] Check for an **Equity UK** update since 2023 (any agreement with PACT or the streamers).
 - [ ] Check **NAVA** (US National Association of Voice Actors) AI rider and **Canadian Federation of Musicians** terms.
 - [ ] Add these sources to the **WAVE01** research watch so changes reach us automatically.

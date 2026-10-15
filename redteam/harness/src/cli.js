@@ -13,7 +13,7 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { ROOT, loadProfiles, plan } from "./agents.js";
-import { runClaude, runHttp, runMock } from "./targets.js";
+import { runClaude, runHttp, runMock, runLumo } from "./targets.js";
 import { score, isFailing } from "./score.js";
 import { judge } from "./judge.js";
 import { writeResults, counts } from "./report.js";
@@ -54,7 +54,8 @@ export async function main(argv = process.argv.slice(2)) {
   if (a.smoke) chosen = chosen.filter((c) => c.smoke);
   if (a.only) chosen = chosen.filter((c) => a.only.includes(c.id));
   const profiles = loadProfiles();
-  const pairs = plan(chosen, profiles, { agents: a.agents });
+  const pool_ = a.target === "lumo" ? profiles.filter((p) => p.runs_on === "lumo") : profiles;
+  const pairs = plan(chosen, pool_, { agents: a.agents });
   if (!pairs.length) { console.error("nothing to run"); return 2; }
 
   const run = {
@@ -62,6 +63,7 @@ export async function main(argv = process.argv.slice(2)) {
     "mock-bad": (c, p) => runMock(c, p, { bad: true }),
     claude: (c, p) => runClaude(c, p, { model: a.model, fallbacks: a.fallbacks }),
     http: (c, p) => runHttp(c, p),
+    lumo: (c, p) => runLumo(c, p),
   }[a.target];
   if (!run) { console.error(`unknown target ${a.target}`); return 2; }
 

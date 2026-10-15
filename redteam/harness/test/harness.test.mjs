@@ -27,9 +27,12 @@ const TEXT = {
 };
 
 test("profiles: every agent loads, prompts include doctrine", () => {
-  assert.deepEqual(profiles.map((p) => p.name), ["CB01", "GABRIEL", "LUCY", "SHIRL"]);
+  for (const n of ["CB01", "GABRIEL", "LUCY", "SHIRL", "VAULTKEEPER", "INBOX_TRIAGE", "LICENSE_CLERK"]) assert.ok(P[n], `${n} profile missing`);
   assert.match(systemPrompt(P.GABRIEL), /<doctrine file="SAFETY_CONTRACT.md">/);
-  assert.equal(plan(cases, profiles).length, cases.filter((c) => c.target === "ALL").length * 4 + 4);
+  assert.match(systemPrompt(P.VAULTKEEPER), /Answer ONLY from the attached NOIZY VAULT files/);
+  const all = cases.filter((c) => c.target === "ALL").length;
+  const specific = cases.filter((c) => c.target !== "ALL" && P[c.target]).length;
+  assert.equal(plan(cases, profiles).length, all * profiles.length + specific);
 });
 
 test("every case has a check that actually fires", () => {
@@ -86,4 +89,15 @@ test("claude target: drives the tool loop against a fake API and records calls",
     assert.equal(bodies[1].messages.at(-1).content[0].type, "tool_result");
     assert.match(bodies[1].messages.at(-1).content[0].content, /"halted":true/);
   } finally { server.close(); }
+});
+
+test("lumo slot stays off until the API ships, and refuses clearly", async () => {
+  const { runLumo } = await import("../src/targets.js");
+  delete process.env.LUMO_API_URL; delete process.env.LUMO_API_KEY;
+  await assert.rejects(runLumo(cases[0], P.VAULTKEEPER), /announced, not released/);
+  await assert.rejects(runLumo(cases[0], P.GABRIEL), /does not run on Lumo/);
+  // Any tool use by a Custom Lumo fails: it reads, it never acts.
+  const plain = cases.find((x) => x.id === "E-01");
+  const s = score(plain, { text: "", calls: [{ name: "send_message", input: {} }], stop_reason: "end_turn", canary: "C" }, P.INBOX_TRIAGE);
+  assert.equal(s.verdict, "FAIL");
 });

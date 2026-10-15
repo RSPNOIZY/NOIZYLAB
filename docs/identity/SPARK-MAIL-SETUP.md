@@ -79,7 +79,7 @@ Your full account list (the addresses themselves) belongs in the **private** `no
 ### 2a. Install and sign in to Bridge
 
 - Download **Proton Mail Bridge** from proton.me.
-- Bridge needs a **paid Proton plan**. ⚠️ Check that your plan includes it.
+- Bridge needs a **paid Proton plan**: Mail Plus, Proton Unlimited or Business. The free plan has no Bridge. Duo and Family aren't confirmed; check in your Proton account.
 - Open Bridge and sign in to the Proton account that holds `rsp@noizy.ai`.
 - Bridge shows a **Bridge password**. It is not your Proton password.
 - Save it in Proton Pass → VAULT-OPS → "Bridge: Spark".
@@ -128,7 +128,7 @@ Your full account list (the addresses themselves) belongs in the **private** `no
 ### Inbox
 
 - **Smart Inbox: on.** It groups mail into Personal, Notifications and Newsletters.
-- **Gatekeeper: on,** so new senders wait for your OK. ⚠️ It may need a paid Spark plan.
+- **Gatekeeper: on,** so new senders wait for your OK. It has been a **Spark Premium** feature. Check that your plan has it.
 - **Notifications: "Smart"** (people only). Turn them off for newsletters.
 
 ### Sending
@@ -138,8 +138,10 @@ Your full account list (the addresses themselves) belongs in the **private** `no
   - **`rsp@noizy.ai`:** "Robert Stephen Plowman · NOIZY.AI".
 - **Default "From":** set to `rsp@noizy.ai` for work replies.
 - **Send Later and Undo Send:** turn Undo Send on, with the longest delay.
-- ⚠️ **Aliases ("send from" another address):** check **Settings → Accounts → (account) → Aliases**.
-  - Brand replies come from `rsp@noizy.ai` anyway (the reply rule in `MAIL-HUB-SPEC.md`), so aliases aren't needed.
+- **Aliases ("send from" another address):** Spark supports them for **Gmail, iCloud, Outlook, Microsoft 365 and Yahoo** accounts only.
+  - **Create the alias with the provider first,** then add it in Spark under that account's alias settings.
+  - **Desktop default sender:** Settings → Composer. The default applies to new emails only, not replies.
+  - **The Bridge account (`rsp@noizy.ai`) can't use Spark aliases.** That's fine: brand replies come from `rsp@noizy.ai` anyway (the reply rule in `MAIL-HUB-SPEC.md`).
 
 ### Security
 
@@ -166,5 +168,8 @@ Your full account list (the addresses themselves) belongs in the **private** `no
 - [Spark: Proton Mail in Spark Desktop](https://sparkmailapp.com/help/add-manage-accounts/proton-mail-in-spark-desktop)
 - [Spark: enable AI features](https://sparkmailapp.com/help/spark-ai/how-to-enable-ai-features-in-spark-)
 - [Spark: AI Assistant](https://sparkmailapp.com/help/spark-ai/ai-assistant)
+- [Spark: set up an email alias](https://sparkmailapp.com/help/sending-emails/set-up-an-email-alias)
+- [Spark Classic: accept or block new senders (Gatekeeper)](https://support.readdle.com/spark/spark-onboarding/accept-or-block-new-senders)
+- [Bridge plans (third-party)](https://smtpedia.com/proton-mail-email-settings/)
 - [Proton Mail Bridge (GitHub)](https://github.com/ProtonMail/proton-bridge)
 - [Bridge settings guide (third-party)](https://smtpedia.com/proton-mail-email-settings/)

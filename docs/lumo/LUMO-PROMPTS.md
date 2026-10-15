@@ -1,5 +1,10 @@
 # Lumo: Role and Prompts
 
+> **Status (checked 2026-10-15):**
+> - **Lumo API:** announced on Proton's roadmap; still no release date.
+> - **Community tools** (pyLumo, lumo-tamer) work by **reverse-engineering** the Lumo website. They must not be used with the vault.
+> - **The Lumo slot is built and switched off:** `redteam/harness/src/lumo.js`. The three Custom Lumos are red-team agents already.
+
 > **Update (2026-10-15):** Lumo 2.0 adds **Custom Lumos**: saved instructions plus files, available only in the web app. Workspace Premium includes Lumo. The three main assistants (Vaultkeeper, Inbox Triage and License Clerk) are defined in `docs/identity/NOIZY-VAULT-SPEC.md` §2. The Projects and prompts below are for ad-hoc work. A Lumo connection to Proton Mail or Calendar is **not confirmed** by any official source I found, so check in the app.
 
 **Owner:** Robert Stephen Plowman

@@ -29,7 +29,7 @@ export const T2125_MAP = {
   "6430": ["8760", "Business taxes, licences, dues and memberships"],
   "6500": ["8910", "Rent"],
   "6550": ["9220", "Utilities"],
-  "6600": ["8760", "Business taxes, licences, dues, memberships and subscriptions"],
+  "6600": ["9270", "Other expenses (software subscriptions; some guides use 8810 office expenses, so ask your accountant)"],
   "6700": ["9220", "Utilities (telephone and internet)"],
   "6800": ["9200", "Travel expenses"],
   "6900": ["9281", "Motor vehicle expenses"],
@@ -75,6 +75,7 @@ export async function t2125(db, book, { from, to } = {}) {
     income, line_8299_gross_business_income: gross,
     expenses, line_9368_total_expenses: totalExp,
     line_9369_net_income_before_adjustments: gross - totalExp,
+    note_line_9946: "Line 9946 (net income after adjustments: business-use-of-home, partner shares, etc.) is what carries to your T1 return. It is not computed here.",
     unmapped, notes,
   };
 }
